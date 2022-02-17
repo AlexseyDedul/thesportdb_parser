@@ -7,10 +7,13 @@ Get TeamVsTeam Sports.
 Get NONTeamVsTeam Sports.
 """
 from __future__ import absolute_import
-import settings as TSD
-from request import make_request
+
+import asyncio
+
+import thesportsdb.settings as TSD
+from thesportsdb.request import make_request
 
 
-def allSports():
-    return make_request(TSD.ALL_SPORTS)
+async def allSports():
+    return await make_request(TSD.ALL_SPORTS)
     ...

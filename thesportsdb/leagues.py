@@ -7,12 +7,12 @@ Get Leagues for Sport.
 Get Table for League at a particular Season.
 """
 from __future__ import absolute_import
-import settings as TSD
-from request import make_request
+import thesportsdb.settings as TSD
+from thesportsdb.request import make_request
 
 
-def allLeagues():
-    return make_request(TSD.ALL_LEAGUES)
+async def allLeagues():
+    return await make_request(TSD.ALL_LEAGUES)
     ...
 
 

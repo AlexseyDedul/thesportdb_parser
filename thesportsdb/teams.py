@@ -5,8 +5,8 @@ Get teams for League.
 Get team Info by ID.
 """
 from __future__ import absolute_import
-import settings as TSD
-from request import make_request
+import thesportsdb.settings as TSD
+from thesportsdb.request import make_request
 
 
 def leagueTeams(league_id: str):

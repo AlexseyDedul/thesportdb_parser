@@ -14,8 +14,8 @@ Get List timeline for events by event ID *Patreon ONLY*
 
 """
 from __future__ import absolute_import
-import settings as TSD
-from request import make_request
+import thesportsdb.settings as TSD
+from thesportsdb.request import make_request
 
 
 def eventLivescore(league_id: str):
