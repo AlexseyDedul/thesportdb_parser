@@ -7,19 +7,20 @@ from config import host, user, password, database
 from thesportsdb.countries import allCountries
 from thesportsdb.leagues import allLeagues
 from thesportsdb.sports import allSports
+from thesportsdb.teams import leagueTeams
 
 
 async def run():
 
-    while True:
-        t0 = time()
-        res = await asyncio.gather(
-            asyncio.create_task(allCountries()),
-            asyncio.create_task(allLeagues()),
-            asyncio.create_task(allSports())
-        )
+    t0 = time()
+    # await asyncio.gather(
+    sports = await asyncio.create_task(allSports())
+    countries = await asyncio.create_task(allCountries())
+    leagues = await asyncio.create_task(allLeagues())
 
-        print(time()-t0)
+    # print(await asyncio.create_task(allCountries()))
+    # print(leagues)
+    # print(await asyncio.create_task(allSports()))
 
     # for i in range(len(res)):
     #     print(res[i])
@@ -28,30 +29,53 @@ async def run():
     # as a "postgres" user.
     conn = await asyncpg.connect(user=user, password=password, database=database, host=host)
     # Execute a statement to create a new table.
+
     await conn.execute('''
-            CREATE TABLE IF NOT EXISTS users(
+            CREATE TABLE IF NOT EXISTS sports(
                 id serial PRIMARY KEY,
-                name text,
-                dob date
-            )
+                name text
+            );
+            CREATE TABLE IF NOT EXISTS countries(
+                id serial PRIMARY KEY,
+                name_en text
+            );
+            CREATE TABLE IF NOT EXISTS league(
+                id serial PRIMARY KEY,
+                idLeague text,
+                strLeague text
+            );
         ''')
 
     # Insert a record into the created table.
-    await conn.execute('''
-            INSERT INTO users(name, dob) VALUES($1, $2)
-        ''', 'Bob', datetime.date(1984, 3, 1))
+    for i in sports['sports']:
+        print(i)
+        await conn.execute('''
+                INSERT INTO sports(name) VALUES($1)
+            ''', i['strSport'])
+
+    for i in countries['countries']:
+        print(i)
+        await conn.execute('''
+                INSERT INTO countries(name_en) VALUES($1)
+            ''', i['name_en'])
+    for i in leagues['leagues']:
+        print(i)
+        await conn.execute('''
+                INSERT INTO league(idLeague, strLeague) VALUES($1, $2)
+            ''', i['idLeague'], i['strLeague'])
 
     # Select a row from the table.
-    row = await conn.fetchrow(
-        'SELECT * FROM users WHERE name = $1', 'Bob')
+    league = await conn.fetch(
+        'SELECT * FROM league')
     # *row* now contains
     # asyncpg.Record(id=1, name='Bob', dob=datetime.date(1984, 3, 1))
-    print(row)
+
+    # for i in league:
+    #     print(await leagueTeams(i['idleague']))
     # Close the connection.
     await conn.close()
+    print(time() - t0)
 
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run())
-    loop.run_forever()
+    asyncio.run(run())

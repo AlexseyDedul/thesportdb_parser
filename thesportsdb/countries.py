@@ -13,6 +13,5 @@ from thesportsdb.request import make_request
 
 
 async def allCountries():
-    await asyncio.sleep(2)
     return await make_request(TSD.ALL_COUNTRIES)
     ...
