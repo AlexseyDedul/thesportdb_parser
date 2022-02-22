@@ -56,3 +56,6 @@ SEARCH_TEAMS = "/searchteams.php" # ?t=Arsenal Search for team by name
 SEARCH_PLAYERS = "/searchplayers.php"
 SEARCH_EVENTS = "/searchevents.php" # ?e=Arsenal_vs_Chelsea ?e=Arsenal_vs_Chelsea&s=2016-2017 Search for event by event name !!!!!!!
 SEARCH_EVENT_FILENAME = "/searchfilename.php" # ?e=English_Premier_League_2015-04-26_Arsenal_vs_Chelsea Search for event by event file name
+
+# List all Seasons in a League ?id=4328
+SEASONS = "/search_all_seasons.php"

@@ -24,6 +24,7 @@ import thesportsdb.teams
 import thesportsdb.sports
 import thesportsdb.settings
 import thesportsdb.request
+import thesportsdb.seasons
 
 __version__ = "0.1.1"
 __author__ = "Tralah M Brian <https://github.com/TralahM/thesportsdb>"
@@ -36,4 +37,6 @@ __all__ = [
     settings,
     sports,
     teams,
+    seasons,
 ]
+
