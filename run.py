@@ -1,14 +1,16 @@
 import asyncio
 from time import time
 import asyncpg
-import os
+
+from app import create_app
 from thesportsdb.countries import allCountries
+from thesportsdb.events import nextLeagueEvents
 from thesportsdb.leagues import allLeagues
 from thesportsdb.sports import allSports
 from thesportsdb.teams import leagueTeams
 
 
-async def createTables(pool):
+async def createTables(pool: asyncpg.pool.Pool):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -33,6 +35,11 @@ async def createTables(pool):
                                     strTeam text,
                                     country text
                                 );
+                                CREATE TABLE IF NOT EXISTS events(
+                                    id serial PRIMARY KEY,
+                                    idEvent text,
+                                    strEvent text
+                                );
                             ''')
         except:
             await tr.rollback()
@@ -42,7 +49,7 @@ async def createTables(pool):
         print("create")
 
 
-async def insertSports(pool, sports: dict):
+async def insertSports(pool: asyncpg.pool.Pool, sports: dict):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -63,7 +70,7 @@ async def insertSports(pool, sports: dict):
         print("insertSports")
 
 
-async def insertCountries(pool, countries: dict):
+async def insertCountries(pool: asyncpg.pool.Pool, countries: dict):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -72,7 +79,6 @@ async def insertCountries(pool, countries: dict):
                 countryExist = await conn.fetch(
                     'SELECT * FROM countries WHERE name_en=$1', i['name_en'])
                 if (countryExist == []):
-                    # print(i)
                     await conn.execute('''
                             INSERT INTO countries(name_en) VALUES($1)
                         ''', i['name_en'])
@@ -84,7 +90,7 @@ async def insertCountries(pool, countries: dict):
     print("insertCountries")
 
 
-async def insertLeagues(pool, leagues: dict):
+async def insertLeagues(pool: asyncpg.pool.Pool, leagues: dict):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -93,7 +99,6 @@ async def insertLeagues(pool, leagues: dict):
                 leagueExist = await conn.fetch(
                     'SELECT idLeague FROM league WHERE idLeague=$1', i['idLeague'])
                 if (leagueExist == []):
-                    # print(i)
                     await conn.execute('''
                             INSERT INTO league(idLeague, strLeague) VALUES($1, $2)
                         ''', i['idLeague'], i['strLeague'])
@@ -105,16 +110,73 @@ async def insertLeagues(pool, leagues: dict):
     print("insertLeagues")
 
 
-async def getLeaguesById(pool) -> list:
+async def getLeaguesIdList(pool: asyncpg.pool.Pool) -> list:
     async with pool.acquire() as conn:
-        async with conn.transaction:
+        tr = conn.transaction()
+        await tr.start()
+        try:
             leagues = await conn.fetch(
                 'SELECT idleague FROM league')
-            print("getLeaguesById")
-        return await leagues
+        except:
+            await tr.rollback()
+            raise
+        else:
+            await tr.commit()
+        print("getLeaguesById")
+        return leagues
 
 
-async def dropTables(pool):
+async def insertTeams(pool: asyncpg.pool.Pool, leagues: list):
+    async with pool.acquire() as conn:
+        tr = conn.transaction()
+        await tr.start()
+        try:
+            for i in leagues:
+                teams = await leagueTeams(i['idleague'])
+                try:
+                    for t in teams['teams']:
+                        teamExist = await conn.fetch(
+                            'SELECT * FROM teams WHERE idTeam=$1', t['idTeam'])
+                        if(teamExist == []):
+                            await conn.execute('''
+                                            INSERT INTO teams(idTeam, strTeam, country) VALUES($1, $2, $3)
+                                        ''', t['idTeam'], t['strTeam'], t['strCountry'])
+                except:
+                    continue
+        except:
+            await tr.rollback()
+            raise
+        else:
+            await tr.commit()
+        print("insertTeams")
+
+
+async def insertEvents(pool: asyncpg.pool.Pool, leagues: list):
+    async with pool.acquire() as conn:
+        tr = conn.transaction()
+        await tr.start()
+        try:
+            for i in leagues:
+                events = await nextLeagueEvents(i['idleague'])
+                try:
+                    for t in events['events']:
+                        # eventsExist = await conn.fetch(
+                        #     'SELECT * FROM events WHERE idEvent=$1', t['idEvent'])
+                        # if(eventsExist == []):
+                        await conn.execute('''
+                                        INSERT INTO events(idEvent, strEvent) VALUES($1, $2)
+                                    ''', t['idEvent'], t['strEvent'])
+                except:
+                    continue
+        except:
+            await tr.rollback()
+            raise
+        else:
+            await tr.commit()
+        print("insertEvents")
+
+
+async def dropTables(pool: asyncpg.pool.Pool):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -134,60 +196,54 @@ async def dropTables(pool):
 
 
 async def run():
-    async with asyncpg.create_pool(user=os.environ.get("USER"),
-                                   password=os.environ.get("PASS"),
-                                   database=os.environ.get("DB"),
-                                   host=os.environ.get("HOST")) as pool:
-        t0 = time()
+    app = await create_app()
+    pool = app['pool']
+    # async with asyncpg.create_pool(user=os.environ.get("USER"),
+    #                                password=os.environ.get("PASS"),
+    #                                database=os.environ.get("DB"),
+    #                                host=os.environ.get("HOST")) as pool:
+    t0 = time()
 
-        # print(await asyncio.create_task(allCountries()))
-        # print(leagues)
-        # print(await asyncio.create_task(allSports()))
+    # print(await asyncio.create_task(allCountries()))
+    # print(leagues)
+    # print(await asyncio.create_task(allSports()))
 
-        # for i in range(len(res)):
-        #     print(res[i])
+    # for i in range(len(res)):
+    #     print(res[i])
 
-        # Establish a connection to an existing database named "test"
-        # as a "postgres" user.
+    # Establish a connection to an existing database named "test"
+    # as a "postgres" user.
+    await asyncio.create_task(dropTables(pool))
+    await createTables(pool)
+
+    await asyncio.gather(
+        await asyncio.create_task(insertSports(pool, await allSports())),
+        await asyncio.create_task(insertCountries(pool, await allCountries())),
+        await asyncio.create_task(insertLeagues(pool, await allLeagues())),
+        # await asyncio.create_task(insertTeams(pool, await getLeaguesIdList(pool))),
+        await asyncio.create_task(insertEvents(pool, await getLeaguesIdList(pool)))
+    )
 
 
-        await createTables(pool)
+    await asyncio.create_task(dropTables(pool))
 
-        await asyncio.gather(
-            insertSports(pool, await allSports()),
-            insertCountries(pool, await allCountries()),
-            insertLeagues(pool, await allLeagues())
-        )
+        #
+        #
+        # teams = await conn.fetch(
+        #     '''SELECT *
+        #     FROM teams
+        #     WHERE country='England'
+        #     ORDER BY idTeam
+        #     ''')
+        # for i in teams:
+        #     print(i)
 
-        await dropTables(pool)
+        # Close the connection.
+    print(time() - t0)
+    await app['db'].delete_pool_connection()
 
-            # for i in league:
-            #     teams = await leagueTeams(i['idleague'])
-            #     try:
-            #         # print(teams['teams'][0]['idTeam'])
-            #         for t in teams['teams']:
-            #             teamExist = await conn.fetch(
-            #                 'SELECT * FROM teams WHERE idTeam=$1', t['idTeam'])
-            #             if(teamExist == []):
-            #                 await conn.execute('''
-            #                                 INSERT INTO teams(idTeam, strTeam, country) VALUES($1, $2, $3)
-            #                             ''', t['idTeam'], t['strTeam'], t['strCountry'])
-            #     except:
-            #         continue
-            #
-            # teams = await conn.fetch(
-            #     '''SELECT *
-            #     FROM teams
-            #     WHERE country='England'
-            #     ORDER BY idTeam
-            #     ''')
-            # for i in teams:
-            #     print(i)
-
-            # Close the connection.
-        print(time() - t0)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run())
-    loop.run_forever()
+

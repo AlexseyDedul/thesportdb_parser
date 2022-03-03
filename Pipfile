@@ -18,6 +18,7 @@ multidict = "==6.0.2"
 requests = "==2.27.1"
 urllib3 = "==1.26.8"
 yarl = "==1.7.2"
+python-decouple = "*"
 
 [dev-packages]
 
