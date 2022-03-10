@@ -9,6 +9,6 @@ import thesportsdb.settings as TSD
 from thesportsdb.request import make_request
 
 
-async def allSeason():
-    return await make_request(TSD.SEASONS)
+async def allSeason(league_id: str):
+    return await make_request(TSD.SEASONS, id=league_id)
     ...
