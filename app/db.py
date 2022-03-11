@@ -2,7 +2,6 @@ import asyncpg
 
 
 class Database():
-
     def __init__(self, user: str, password: str, database: str, host: str):
         self.user = user
         self.password = password
@@ -17,17 +16,43 @@ class Database():
             try:
                 await conn.execute('''
                                     CREATE TABLE IF NOT EXISTS sports(
-                                        id serial PRIMARY KEY,
-                                        name text
+                                        idSport PRIMARY KEY,
+                                        strSport text,
+                                        strFormat text
                                     );
                                     CREATE TABLE IF NOT EXISTS countries(
                                         id serial PRIMARY KEY,
                                         name_en text
                                     );
                                     CREATE TABLE IF NOT EXISTS league(
-                                        id serial PRIMARY KEY,
-                                        idLeague text,
-                                        strLeague text
+                                        idLeague PRIMARY KEY,
+                                        strSport text,
+                                        strLeague text,
+                                        strLeagueAlternate text,
+                                        strDivision text,
+                                        strCurrentSeason text,
+                                        intFormedYear text,
+                                        dateFirstEvent text,
+                                        strCountry text,
+                                        strWebsite text,
+                                        strFacebook text,
+                                        strTwitter text,
+                                        strYoutube text,
+                                        strRSS text,
+                                        strDescriptionEN text,
+                                        strDescriptionRU text,
+                                        strTvRights text,
+                                        strFanart1 text,
+                                        strFanart2 text,
+                                        strFanart3 text,
+                                        strFanart4 text,
+                                        strBanner text,
+                                        strBadge text,
+                                        strLogo text,
+                                        strPoster text,
+                                        strTrophy text,
+                                        strNaming text,
+                                        strComplete text
                                     );
                                     CREATE TABLE IF NOT EXISTS teams(
                                         id serial PRIMARY KEY,
@@ -44,6 +69,13 @@ class Database():
                                         id serial PRIMARY KEY,
                                         idStanding text
                                     );
+                                    CREATE TABLE IF NOT EXISTS players(
+                                        id serial PRIMARY KEY,
+                                        idPlayer text,
+                                        idTeamNational text,
+                                        idPlayerManager text
+                                    );
+                                    
                                 ''')
             except:
                 await tr.rollback()
@@ -52,13 +84,15 @@ class Database():
                 await tr.commit()
             print("create")
 
-    async def get_pool_connection(self):
+    async def get_pool_connection(self) -> asyncpg.pool.Pool:
         try:
+            # print(self.user,self.password,self.database,self.host)
             self.pool = await asyncpg.create_pool(user=self.user,
                                              password=self.password,
                                              database=self.database,
                                              host=self.host)
-            await self.drop_tables()
+
+            # await self.drop_tables()
             await self.create_tables()
             return self.pool
         except:
@@ -76,6 +110,7 @@ class Database():
                                     DROP TABLE IF EXISTS teams;
                                     DROP TABLE IF EXISTS events;
                                     DROP TABLE IF EXISTS tables;
+                                    DROP TABLE IF EXISTS players;
                                     ''')
             except:
                 await tr.rollback()

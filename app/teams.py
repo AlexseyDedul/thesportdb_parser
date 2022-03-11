@@ -1,3 +1,5 @@
+import asyncio
+
 import asyncpg
 
 from thesportsdb.teams import leagueTeams
@@ -27,3 +29,15 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list):
         else:
             await tr.commit()
         print("insert_teams")
+
+
+async def get_teams_ids_list(pool: asyncpg.pool.Pool) -> list:
+    async with pool.acquire() as conn:
+        while True:
+            teams = await conn.fetch(
+                'SELECT idTeam FROM teams')
+            if teams != []:
+                print(f"get_teams_ids_list {len(teams)}")
+                return teams
+            else:
+                await asyncio.sleep(30)

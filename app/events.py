@@ -24,7 +24,7 @@ async def insert_events(pool: asyncpg.pool.Pool, leagues: list):
                                                 ''', e['idEvent'], e['strEvent'])
                         except:
                             continue
-                    print("league insert")
+                    print("event insert")
                 except:
                     continue
         except:
