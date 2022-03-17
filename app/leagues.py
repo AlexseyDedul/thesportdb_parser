@@ -1,3 +1,5 @@
+import asyncio
+
 import asyncpg
 
 from thesportsdb.leagues import leagueInfo
@@ -11,15 +13,15 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
             if not (await _count_leagues_from_db(pool, leagues)):
                 for i in leagues['leagues']:
                     leagueExist = await conn.fetch(
-                        'SELECT idLeague FROM league WHERE idLeague=$1', i['idLeague'])
+                        'SELECT idLeague FROM league WHERE idLeague=$1', int(i['idLeague']))
                     if (leagueExist == []):
-                        league = leagueInfo(i['idLeague'])
+                        league = await leagueInfo(i['idLeague'])
                         await conn.execute('''
                                 INSERT INTO league(idLeague,
                                         strSport,
                                         strLeague,
                                         strLeagueAlternate,
-                                        strDivision,
+                                        intDivision,
                                         strCurrentSeason,
                                         intFormedYear,
                                         dateFirstEvent,
@@ -46,13 +48,13 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                                 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
                                 $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, 
                                 $25, $26, $27, $28)
-                            ''', league['leagues'][0]["idLeague"],
+                            ''', int(league['leagues'][0]["idLeague"]),
                                         league['leagues'][0]["strSport"],
                                         league['leagues'][0]["strLeague"],
                                         league['leagues'][0]["strLeagueAlternate"],
-                                        league['leagues'][0]["strDivision"],
+                                        int(league['leagues'][0]["intDivision"]) if league['leagues'][0]["intDivision"] is not None else 0,
                                         league['leagues'][0]["strCurrentSeason"],
-                                        league['leagues'][0]["intFormedYear"],
+                                        int(league['leagues'][0]["intFormedYear"]) if league['leagues'][0]["intFormedYear"] is not None else 0,
                                         league['leagues'][0]["dateFirstEvent"],
                                         league['leagues'][0]["strCountry"],
                                         league['leagues'][0]["strWebsite"],
@@ -75,8 +77,9 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                                         league['leagues'][0]["strNaming"],
                                         league['leagues'][0]["strComplete"]
                                            )
+                    await asyncio.sleep(1)
             else:
-                print('doesn`t insert')
+                print('doesn`t insert leagues')
         except:
             await tr.rollback()
             raise
@@ -87,26 +90,20 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
 
 async def _count_leagues_from_db(pool: asyncpg.pool.Pool, leagues: dict) -> bool:
     async with pool.acquire() as conn:
-        leagues_from_db = await conn.fetch('''
+        leagues_from_db = await conn.fetchrow('''
             SELECT count(idLeague) FROM league
         ''')
 
-        if leagues_from_db[0]['count'] != len(leagues['leagues']):
+        if leagues_from_db['count'] != len(leagues['leagues']):
             return False
         return True
 
 
 async def get_leagues_ids_list(pool: asyncpg.pool.Pool) -> list:
     async with pool.acquire() as conn:
-        tr = conn.transaction()
-        await tr.start()
-        try:
-            leagues = await conn.fetch(
-                'SELECT idleague FROM league')
-        except:
-            await tr.rollback()
-            raise
-        else:
-            await tr.commit()
+        leagues = await conn.fetch(
+            'SELECT idLeague FROM league')
         print("getLeaguesById")
+        if not leagues:
+            return None
         return leagues

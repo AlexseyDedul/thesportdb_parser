@@ -15,4 +15,5 @@ async def make_request(endpoint: str, **kwargs):
     URL = _make_url(endpoint)
     async with aiohttp.ClientSession() as session:
         async with session.get(URL, params=params) as response:
+            print(response)
             return await response.json()

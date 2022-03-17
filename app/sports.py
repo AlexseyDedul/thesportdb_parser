@@ -9,12 +9,12 @@ async def insert_sports(pool: asyncpg.pool.Pool, sports: dict):
             if not (await _count_sports_from_db(pool, sports)):
                 for i in sports['sports']:
                     sportExist = await conn.fetch(
-                        'SELECT * FROM sports WHERE idSport=$1', i['idSport'])
+                        'SELECT * FROM sports WHERE idSport=$1', int(i['idSport']))
                     if (sportExist == []):
                         # print(i)
                         await conn.execute('''
                                 INSERT INTO sports(idSport, strSport, strFormat) VALUES($1, $2, $3)
-                            ''', i['idSport'], i['strSport'], i['strFormat'])
+                            ''', int(i['idSport']), i['strSport'], i['strFormat'])
             else:
                 print("doesn`t insert sports.")
         except:

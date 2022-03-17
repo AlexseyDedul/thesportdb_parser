@@ -1,13 +1,20 @@
 import os
 
 from app.db import Database
+from dotenv import load_dotenv
 
 
-async def create_app():
-    db = Database(user=os.environ.get("USER"),
-                  password=os.environ.get("PASS"),
-                  database=os.environ.get("DB"),
-                  host=os.environ.get("HOST"))
+load_dotenv()
+
+def create_app():
+    user = os.environ.get('USER')
+    password = os.environ.get('PASS')
+    database = os.environ.get('DB')
+    host = os.environ.get('HOST')
+    db = Database(user=user,
+                  password=password,
+                  database=database,
+                  host=host)
 
     app = {
         'db': db
