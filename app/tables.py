@@ -1,5 +1,3 @@
-import asyncio
-
 import asyncpg
 
 from thesportsdb.leagues import leagueSeasonTable
@@ -13,7 +11,6 @@ async def get_tables_api(leagues: list) -> list:
             seasons = await allSeason(str(i['idleague']))
             for s in seasons['seasons']:
                 try:
-                    await asyncio.sleep(2)
                     table = await leagueSeasonTable(str(i['idleague']), s['strSeason'])
                     for t in table['table']:
                         tables.append(t)
@@ -33,7 +30,8 @@ async def get_tables_list_db(pool: asyncpg.pool.Pool):
 
 async def insert_tables(pool: asyncpg.pool.Pool, leagues: list):
     tables = await get_tables_api(leagues)
-    if await get_tables_list_db(pool)['count'] != len(tables):
+    tables_db = await get_tables_list_db(pool)
+    if tables_db['count'] != len(tables):
         async with pool.acquire() as conn:
             tr = conn.transaction()
             await tr.start()

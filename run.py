@@ -3,12 +3,19 @@ from time import time
 import asyncpg
 
 from app import create_app
+from app.contracts import insert_contracts
 from app.countries import insert_countries
-from app.events import insert_events
+from app.eventTV import insert_events_tv
+from app.events import insert_events, insert_event_stats
+from app.formerTeam import insert_former_teams
+from app.honourTeam import insert_honours_teams
 from app.leagues import insert_leagues, get_leagues_ids_list
+from app.lineup import insert_lineups
+from app.players import insert_players, get_list_players_db
 from app.sports import insert_sports
 from app.tables import insert_tables
 from app.teams import insert_teams, get_teams_ids_list, get_team_by_id
+from app.timeline import insert_timeline
 from thesportsdb.countries import allCountries
 from thesportsdb.leagues import allLeagues, leagueSeasonTable
 from thesportsdb.players import teamPlayers
@@ -48,15 +55,27 @@ async def run():
     #         'SELECT idLeague FROM league WHERE idLeague=$1', 4340)
     #     print(s is None)
 
-    await asyncio.create_task(insert_countries(pool, await allCountries())),
-    await asyncio.create_task(insert_sports(pool, await allSports())),
-    await asyncio.create_task(insert_leagues(pool, await allLeagues()))
-    leagues = await get_leagues_ids_list(pool)
+
+
+
+
+    # await asyncio.create_task(insert_countries(pool, await allCountries())),
+    # await asyncio.create_task(insert_sports(pool, await allSports())),
+    # await asyncio.create_task(insert_leagues(pool, await allLeagues()))
+    # leagues = await get_leagues_ids_list(pool)
     # await asyncio.gather(
-    await asyncio.create_task(insert_teams(pool, leagues)),
+    # await asyncio.create_task(insert_teams(pool, leagues)),
+    # await asyncio.create_task(insert_tables(pool, leagues)),
     # await asyncio.create_task(insert_events(pool, leagues)),
-    await asyncio.create_task(insert_tables(pool, leagues)),
-        # asyncio.create_task(insert_players(pool))
+    # await asyncio.create_task(insert_players(pool))
+    # players = await get_list_players_db(pool)
+    # await asyncio.create_task(insert_contracts(pool, players))
+    # await asyncio.create_task(insert_former_teams(pool, players))
+    # await asyncio.create_task(insert_honours_teams(pool, players))
+    await asyncio.create_task(insert_event_stats(pool))
+    await asyncio.create_task(insert_events_tv(pool))
+    await asyncio.create_task(insert_timeline(pool))
+    await asyncio.create_task(insert_lineups(pool))
 
     print(time() - t0)
 

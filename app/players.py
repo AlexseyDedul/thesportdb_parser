@@ -1,5 +1,3 @@
-import asyncio
-
 import asyncpg
 
 from app.teams import get_teams_ids_list
@@ -11,7 +9,6 @@ async def get_players_api(pool: asyncpg.pool.Pool) -> list:
     teams = await get_teams_ids_list(pool)
     for t in teams:
         try:
-            await asyncio.sleep(2)
             player = await teamPlayers(str(t['idteam']))
             for p in player['player']:
                 list_players.append(p)
@@ -23,50 +20,29 @@ async def get_players_api(pool: asyncpg.pool.Pool) -> list:
 async def get_list_players_db(pool: asyncpg.pool.Pool) -> list:
     async with pool.acquire() as conn:
         return await conn.fetch('''
-                                        SELECT idPlayer 
-                                        FROM player;
-                                        ''')
-
-
-async def insert_manager(pool: asyncpg.pool.Pool, players: list):
-    async with pool.acquire() as conn:
-        tr = conn.transaction()
-        await tr.start()
-        try:
-            for p in players:
-                if p['idPlayerManager'] is not None:
-                    manager_exist = await conn.fetchrow('''
-                                                        SELECT *
-                                                        FROM playerManager
-                                                        WHERE idManager=$1
-                                                        ''', int(p['idPlayerManager']))
-                    if manager_exist is None:
-                        await conn.execute('''
-                                            INSERT INTO playerManager(idManager)
-                                            VALUES($1)
-                                            ''', int(p['idPlayerManager']))
-        except:
-            await tr.rollback()
-        else:
-            await tr.commit()
+                                SELECT idPlayer 
+                                FROM player;
+                                ''')
 
 
 async def insert_players(pool: asyncpg.pool.Pool):
-    players = get_players_api(pool)
-    if len(players) != await get_list_players_db(pool) and players:
-        await insert_manager(pool, players)
+    players = await get_players_api(pool)
+    players_db = await get_list_players_db(pool)
+    if len(players) != len(players_db) and players:
         async with pool.acquire() as conn:
             tr = conn.transaction()
             await tr.start()
             try:
                 for p in players:
-                    await conn.execute('''
+                    player_exist = await conn.fetchrow('''
+                                                        SELECT * FROM player WHERE idPlayer=$1
+                                                        ''', int(p['idPlayer']))
+                    if player_exist is None:
+                        await conn.execute('''
                                     INSERT INTO player(
-                                    idPlayer,
-                                        idPlayerManager,
+                                        idPlayer,
                                         strNationality,
                                         strPlayer,
-                                        strSeason,
                                         strTeam,
                                         strSport,
                                         dateBorn,
@@ -99,43 +75,40 @@ async def insert_players(pool: asyncpg.pool.Pool):
                                     $1, $2, $3, $4, $5, $6, $7, $8,
                                         $9, $10, $11, $12, $13, $14, $15, $16,
                                         $17, $18, $19, $20, $21, $22, $23, $24,
-                                        $25, $26, $27, $28, $29, $30, $31, $32,
-                                        $33
+                                        $25, $26, $27, $28, $29, $30, $31
                                     )
                                 ''', int(p['idPlayer']),
-                                        int(p['idPlayerManager']),
-                                        p['strNationality'],
-                                        p['strPlayer'],
-                                        p['strSeason'],
-                                        p['strTeam'],
-                                        p['strSport'],
-                                        p['dateBorn'],
-                                        p['strNumber'],
-                                        p['dateSigned'],
-                                        p['strSigning'],
-                                        p['strWage'],
-                                        p['strOutfitter'],
-                                        p['strKit'],
-                                        p['strAgent'],
-                                        p['strBirthLocation'],
-                                        p['strDescriptionEN'],
-                                        p['strDescriptionRU'],
-                                        p['strGender'],
-                                        p['strSide'],
-                                        p['strPosition'],
-                                        p['strFacebook'],
-                                        p['strWebsite'],
-                                        p['strTwitter'],
-                                        p['strInstagram'],
-                                        p['strYoutube'],
-                                        p['strHeight'],
-                                        p['strWeight'],
-                                        p['strThumb'],
-                                        p['strFanart1'],
-                                        p['strFanart2'],
-                                        p['strFanart3'],
-                                        p['strFanart4'])
-                print("players insert")
+                                       p['strNationality'],
+                                       p['strPlayer'],
+                                       p['strTeam'],
+                                       p['strSport'],
+                                       p['dateBorn'],
+                                       p['strNumber'],
+                                       p['dateSigned'],
+                                       p['strSigning'],
+                                       p['strWage'],
+                                       p['strOutfitter'],
+                                       p['strKit'],
+                                       p['strAgent'],
+                                       p['strBirthLocation'],
+                                       p['strDescriptionEN'],
+                                       p['strDescriptionRU'],
+                                       p['strGender'],
+                                       p['strSide'],
+                                       p['strPosition'],
+                                       p['strFacebook'],
+                                       p['strWebsite'],
+                                       p['strTwitter'],
+                                       p['strInstagram'],
+                                       p['strYoutube'],
+                                       p['strHeight'],
+                                       p['strWeight'],
+                                       p['strThumb'],
+                                       p['strFanart1'],
+                                       p['strFanart2'],
+                                       p['strFanart3'],
+                                       p['strFanart4'])
+                        print("players insert")
             except:
                 await tr.rollback()
                 raise
@@ -147,8 +120,10 @@ async def insert_players(pool: asyncpg.pool.Pool):
 
 async def check_teams_in_player(pool: asyncpg.pool.Pool, player_team: list):
     for player in player_team:
-        await insert_teams_player(pool, int(player['idPlayer']), int(player['idTeam']))
-        await insert_teams_player(pool, int(player['idPlayer']), int(player['idTeam2']))
+        await insert_teams_player(pool, int(player['idPlayer']),
+                                  int(player['idTeam']))
+        await insert_teams_player(pool, int(player['idPlayer']),
+                                  int(player['idTeam2'] if player['idTeam2'] else 0))
         if player['idTeamNational'] is not None:
             await insert_teams_player(pool, int(player['idPlayer']), int(player['idTeamNational']))
 

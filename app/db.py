@@ -164,10 +164,8 @@ class Database():
                                     );
                                     CREATE TABLE IF NOT EXISTS player(
                                         idPlayer integer PRIMARY KEY,
-                                        idPlayerManager integer REFERENCES playerManager (idManager),
                                         strNationality text,
                                         strPlayer text,
-                                        strSeason text,
                                         strTeam text,
                                         strSport text,
                                         dateBorn text,
@@ -200,10 +198,96 @@ class Database():
                                     CREATE TABLE IF NOT EXISTS playerTeam(
                                         idPlayer integer REFERENCES player (idPlayer),
                                         idTeam integer REFERENCES team (idTeam)
+                                    );
+                                    CREATE TABLE IF NOT EXISTS contract(
+                                        idContract integer PRIMARY KEY,
+                                        idPlayer integer REFERENCES player (idPlayer),
+                                        idTeam integer REFERENCES team (idTeam),
+                                        strSport text,
+                                        strPlayer text,
+                                        strTeam text,
+                                        strTeamBadge text,
+                                        strYearStart text,
+                                        strYearEnd text,
+                                        strWage text
+                                    );
+                                    CREATE TABLE IF NOT EXISTS formerTeam(
+                                        idFormerTeam integer PRIMARY KEY,
+                                        idPlayer integer REFERENCES player (idPlayer),
+                                        idTeam integer REFERENCES team (idTeam),
+                                        strSport text,
+                                        strPlayer text,
+                                        strFormerTeam text,
+                                        strMoveType text,
+                                        strTeamBadge text,
+                                        strJoined text,
+                                        strDeparted text
+                                    );
+                                    CREATE TABLE IF NOT EXISTS honoursTeam(
+                                        idHonoursTeam integer PRIMARY KEY,
+                                        idPlayer integer REFERENCES player (idPlayer),
+                                        idTeam integer REFERENCES team (idTeam),
+                                        strSport text,
+                                        strPlayer text,
+                                        strTeam text,
+                                        strHonour text,
+                                        strSeason text,
+                                        intChecked text
+                                    );
+                                    CREATE TABLE IF NOT EXISTS eventStats(
+                                        idStatistic integer PRIMARY KEY,
+                                        idEvent integer REFERENCES events (idEvent),
+                                        strEvent text,
+                                        strStat text,
+                                        intHome integer,
+                                        intAway integer
                                     ); 
-                                    CREATE TABLE IF NOT EXISTS playerManager(
-                                        idManager integer PRIMARY KEY,
-                                        strManager text
+                                    CREATE TABLE IF NOT EXISTS channel(
+                                        idChannel integer PRIMARY KEY,
+                                        strChannel text
+                                    ); 
+                                    CREATE TABLE IF NOT EXISTS eventTV(
+                                        id integer PRIMARY KEY,
+                                        idEvent integer REFERENCES events (idEvent),
+                                        idChannel integer REFERENCES channel (idChannel),
+                                        strCountry text,
+                                        strLogo text,
+                                        strSeason text,
+                                        strTime text,
+                                        dateEvent text,
+                                        strTimeStamp text
+                                    ); 
+                                    CREATE TABLE IF NOT EXISTS timeline(
+                                        idTimeline integer PRIMARY KEY,
+                                        idEvent integer REFERENCES events (idEvent),
+                                        idPlayer integer REFERENCES player (idPlayer),
+                                        idTeam integer REFERENCES team (idTeam),
+                                        strTimeline text,
+                                        strTimelineDetail text,
+                                        strHome text,
+                                        strEvent text,
+                                        strCountry text,
+                                        idAssist integer,
+                                        strAssist text,
+                                        intTime text,
+                                        strComment text,
+                                        dateEvent text,
+                                        strSeason text
+                                    );  
+                                    CREATE TABLE IF NOT EXISTS lineup(
+                                        idLineup integer PRIMARY KEY,
+                                        idEvent integer REFERENCES events (idEvent),
+                                        idPlayer integer REFERENCES player (idPlayer),
+                                        idTeam integer REFERENCES team (idTeam),
+                                        strEvent text,
+                                        strPosition text,
+                                        strPositionShort text,
+                                        strFormation integer,
+                                        strHome text,
+                                        strSubstitute text,
+                                        intSquadNumber text,
+                                        strCountry text,
+                                        strSeason text
                                     ); 
                                 ''')
             except:
@@ -233,10 +317,14 @@ class Database():
             await tr.start()
             try:
                 await conn.execute('''
-                                    DROP TABLE IF EXISTS events;
-                                    DROP TABLE IF EXISTS tables;
-                                    DROP TABLE IF EXISTS playerTeam;
-                                    DROP TABLE IF EXISTS player CASCADE;
+                                    DROP TABLE IF EXISTS contract;
+                                    DROP TABLE IF EXISTS eventStats;
+                                    DROP TABLE IF EXISTS formerTeam;
+                                    DROP TABLE IF EXISTS honoursTeam;
+                                    DROP TABLE IF EXISTS channel cascade;
+                                    DROP TABLE IF EXISTS eventTV;
+                                    DROP TABLE IF EXISTS timeline;
+                                    DROP TABLE IF EXISTS lineup;
                                     ''')
             except:
                 await tr.rollback()

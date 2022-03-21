@@ -9,7 +9,6 @@ async def get_teams_by_league(leagues: list) -> dict:
     dict_league_teams = {}
     for i in leagues:
         try:
-            await asyncio.sleep(1.5)
             teams = await leagueTeams(str(i['idleague']))
             teams_ids_list = []
             for t in teams['teams']:

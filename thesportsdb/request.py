@@ -2,6 +2,9 @@
 Module to Provide Functionality for Making requests to the API.
 """
 from __future__ import absolute_import
+
+import asyncio
+
 import thesportsdb.settings as TSD
 import aiohttp
 
@@ -14,6 +17,8 @@ async def make_request(endpoint: str, **kwargs):
     params = kwargs
     URL = _make_url(endpoint)
     async with aiohttp.ClientSession() as session:
+        await asyncio.sleep(2)
         async with session.get(URL, params=params) as response:
             print(response)
-            return await response.json()
+            if response.content_type == 'application/json':
+                return await response.json()
