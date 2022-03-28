@@ -1,6 +1,6 @@
 import asyncpg
 
-from app.events import get_event_ids_db
+from app.thesportsdb_parser.events import get_event_ids_db
 from thesportsdb.events import eventTimeline
 
 

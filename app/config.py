@@ -2,9 +2,10 @@ import os
 
 from app.db import Database
 from dotenv import load_dotenv
-
+import logging
 
 load_dotenv()
+
 
 def create_app():
     user = os.environ.get('USER')
