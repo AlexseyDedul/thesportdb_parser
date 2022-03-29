@@ -1,5 +1,3 @@
-import asyncio
-
 import asyncpg.pool
 
 from thesportsdb.players import playersContracts
@@ -15,15 +13,6 @@ async def get_contracts_api(players: list) -> list:
         except:
             continue
     return list_contracts
-
-#
-# async def get_contracts_db(pool: asyncpg.pool.Pool):
-#     async with pool.acquire() as conn:
-#         count_contracts = await conn.fetchrow('''
-#                                                 SELECT count(*)
-#                                                 FROM contract
-#                                                 ''')
-#     return count_contracts['count']
 
 
 async def update_contracts(pool: asyncpg.pool.Pool, contract: dict):
@@ -44,15 +33,15 @@ async def update_contracts(pool: asyncpg.pool.Pool, contract: dict):
                                     strWage=$9
                                 WHERE idcontract=$10
                                 ''', int(contract['idPlayer']),
-                                        int(contract['idTeam']),
-                                        contract['strSport'],
-                                        contract['strPlayer'],
-                                        contract['strTeam'],
-                                        contract['strTeamBadge'],
-                                        contract['strYearStart'],
-                                        contract['strYearEnd'],
-                                        contract['strWage'],
-                                        int(contract['id']))
+                               int(contract['idTeam']),
+                               contract['strSport'],
+                               contract['strPlayer'],
+                               contract['strTeam'],
+                               contract['strTeamBadge'],
+                               contract['strYearStart'],
+                               contract['strYearEnd'],
+                               contract['strWage'],
+                               int(contract['id']))
             print(f"update contract: {int(contract['id'])}")
 
         except:
@@ -93,15 +82,15 @@ async def insert_contracts(pool: asyncpg.pool.Pool, players: list):
                                         $10
                                         )
                                         ''', int(contract['id']),
-                                        int(contract['idPlayer']),
-                                        int(contract['idTeam']),
-                                        contract['strSport'],
-                                        contract['strPlayer'],
-                                        contract['strTeam'],
-                                        contract['strTeamBadge'],
-                                        contract['strYearStart'],
-                                        contract['strYearEnd'],
-                                        contract['strWage'])
+                                       int(contract['idPlayer']),
+                                       int(contract['idTeam']),
+                                       contract['strSport'],
+                                       contract['strPlayer'],
+                                       contract['strTeam'],
+                                       contract['strTeamBadge'],
+                                       contract['strYearStart'],
+                                       contract['strYearEnd'],
+                                       contract['strWage'])
                     print('contract insert')
                 else:
                     await update_contracts(pool, contract)

@@ -316,22 +316,23 @@ class Database():
             tr = conn.transaction()
             await tr.start()
             try:
-                await conn.execute('''
-                                    DROP TABLE IF EXISTS contract;
-                                    DROP TABLE IF EXISTS eventStats;
-                                    DROP TABLE IF EXISTS formerTeam;
-                                    DROP TABLE IF EXISTS honoursTeam;
-                                    DROP TABLE IF EXISTS channel cascade;
-                                    DROP TABLE IF EXISTS eventTV;
-                                    DROP TABLE IF EXISTS timeline;
-                                    DROP TABLE IF EXISTS lineup;
-                                    ''')
+                pass
+                # await conn.execute('''
+                #
+                #                     ''')
             except:
                 await tr.rollback()
                 raise
             else:
                 await tr.commit()
         print("drop")
+        # '''
+        # DROP TABLE IF EXISTS eventStats;
+        #                             DROP TABLE IF EXISTS channel cascade;
+        #                             DROP TABLE IF EXISTS eventTV;
+        #                             DROP TABLE IF EXISTS timeline;
+        #                             DROP TABLE IF EXISTS lineup;
+        # '''
 
     async def delete_pool_connection(self, pool):
         await self.drop_tables()

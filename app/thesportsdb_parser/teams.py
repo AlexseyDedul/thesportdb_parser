@@ -42,9 +42,7 @@ async def get_team_by_id(pool: asyncpg.pool.Pool, id_team: int):
 
 
 async def insert_teams(pool: asyncpg.pool.Pool, leagues: list):
-    # dict_league_teams = {}
     dict_league_teams = await get_teams_by_league(leagues)
-    # if not (await is_compare_size(pool, dict_league_teams)):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -124,20 +122,14 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list):
                                            t['strTeamFanart3'],
                                            t['strTeamFanart4'])
                         print(f"teams insert {int(t['idTeam'])}")
-
                     else:
                         await update_team(pool, t)
-
         except:
             await tr.rollback()
-            print('teams rollback')
             raise
         else:
             await tr.commit()
-            print("teams commit")
-
     print("insert_teams")
-
     if await is_compare_size(pool, dict_league_teams):
         await insert_league_teams(pool, dict_league_teams)
     else:
@@ -240,7 +232,6 @@ async def insert_league_teams(pool: asyncpg.pool.Pool, league_team: dict):
                                         ''', item[0], int(team['idTeam']))
                     print('insert LT')
         except:
-            print('rollback LT')
             await tr.rollback()
             raise
         else:

@@ -77,7 +77,6 @@ async def insert_tables(pool: asyncpg.pool.Pool, leagues: list):
                     print(f"tables insert {len(tables)}")
                 else:
                     await update_tables(pool, t)
-
         except:
             print('tables rollback')
             await tr.rollback()

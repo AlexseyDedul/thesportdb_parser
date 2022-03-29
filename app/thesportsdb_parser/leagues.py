@@ -1,5 +1,3 @@
-import asyncio
-
 import asyncpg
 
 from thesportsdb.leagues import leagueInfo
@@ -61,33 +59,33 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                             $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, 
                             $25, $26, $27, $28)
                         ''', int(league["idLeague"]),
-                                    league["strSport"],
-                                    league["strLeague"],
-                                    league["strLeagueAlternate"],
-                                    int(league["intDivision"]) if league["intDivision"] is not None else 0,
-                                    league["strCurrentSeason"],
-                                    int(league["intFormedYear"]) if league["intFormedYear"] is not None else 0,
-                                    league["dateFirstEvent"],
-                                    league["strCountry"],
-                                    league["strWebsite"],
-                                    league["strFacebook"],
-                                    league["strTwitter"],
-                                    league["strYoutube"],
-                                    league["strRSS"],
-                                    league["strDescriptionEN"],
-                                    league["strDescriptionRU"],
-                                    league["strTvRights"],
-                                    league["strFanart1"],
-                                    league["strFanart2"],
-                                    league["strFanart3"],
-                                    league["strFanart4"],
-                                    league["strBanner"],
-                                    league["strBadge"],
-                                    league["strLogo"],
-                                    league["strPoster"],
-                                    league["strTrophy"],
-                                    league["strNaming"],
-                                    league["strComplete"]
+                                       league["strSport"],
+                                       league["strLeague"],
+                                       league["strLeagueAlternate"],
+                                       int(league["intDivision"]) if league["intDivision"] is not None else 0,
+                                       league["strCurrentSeason"],
+                                       int(league["intFormedYear"]) if league["intFormedYear"] is not None else 0,
+                                       league["dateFirstEvent"],
+                                       league["strCountry"],
+                                       league["strWebsite"],
+                                       league["strFacebook"],
+                                       league["strTwitter"],
+                                       league["strYoutube"],
+                                       league["strRSS"],
+                                       league["strDescriptionEN"],
+                                       league["strDescriptionRU"],
+                                       league["strTvRights"],
+                                       league["strFanart1"],
+                                       league["strFanart2"],
+                                       league["strFanart3"],
+                                       league["strFanart4"],
+                                       league["strBanner"],
+                                       league["strBadge"],
+                                       league["strLogo"],
+                                       league["strPoster"],
+                                       league["strTrophy"],
+                                       league["strNaming"],
+                                       league["strComplete"]
                                        )
                 else:
                     await update_leagues(pool, league)
@@ -137,34 +135,34 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
                                         strComplete=$27
                                 WHERE idleague=$28
                             ''',
-                                   league["strSport"],
-                                   league["strLeague"],
-                                   league["strLeagueAlternate"],
-                                   int(league["intDivision"]) if league["intDivision"] is not None else 0,
-                                   league["strCurrentSeason"],
-                                   int(league["intFormedYear"]) if league["intFormedYear"] is not None else 0,
-                                   league["dateFirstEvent"],
-                                   league["strCountry"],
-                                   league["strWebsite"],
-                                   league["strFacebook"],
-                                   league["strTwitter"],
-                                   league["strYoutube"],
-                                   league["strRSS"],
-                                   league["strDescriptionEN"],
-                                   league["strDescriptionRU"],
-                                   league["strTvRights"],
-                                   league["strFanart1"],
-                                   league["strFanart2"],
-                                   league["strFanart3"],
-                                   league["strFanart4"],
-                                   league["strBanner"],
-                                   league["strBadge"],
-                                   league["strLogo"],
-                                   league["strPoster"],
-                                   league["strTrophy"],
-                                   league["strNaming"],
-                                   league["strComplete"],
-                                    int(league["idLeague"]))
+                               league["strSport"],
+                               league["strLeague"],
+                               league["strLeagueAlternate"],
+                               int(league["intDivision"]) if league["intDivision"] is not None else 0,
+                               league["strCurrentSeason"],
+                               int(league["intFormedYear"]) if league["intFormedYear"] is not None else 0,
+                               league["dateFirstEvent"],
+                               league["strCountry"],
+                               league["strWebsite"],
+                               league["strFacebook"],
+                               league["strTwitter"],
+                               league["strYoutube"],
+                               league["strRSS"],
+                               league["strDescriptionEN"],
+                               league["strDescriptionRU"],
+                               league["strTvRights"],
+                               league["strFanart1"],
+                               league["strFanart2"],
+                               league["strFanart3"],
+                               league["strFanart4"],
+                               league["strBanner"],
+                               league["strBadge"],
+                               league["strLogo"],
+                               league["strPoster"],
+                               league["strTrophy"],
+                               league["strNaming"],
+                               league["strComplete"],
+                               int(league["idLeague"]))
             print("league updated")
         except:
             await tr.rollback()
@@ -177,7 +175,6 @@ async def get_leagues_ids_list(pool: asyncpg.pool.Pool) -> list:
     async with pool.acquire() as conn:
         leagues = await conn.fetch(
             'SELECT idLeague FROM league')
-        print("getLeaguesById")
         if not leagues:
             return None
         return leagues

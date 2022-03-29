@@ -22,57 +22,83 @@ async def get_honours_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
     return list_honours
 
 
-async def get_honours_team_db(pool: asyncpg.pool.Pool):
+async def update_honours_team(pool: asyncpg.pool.Pool, honours: dict):
     async with pool.acquire() as conn:
-        count_honours_teams = await conn.fetchrow('''
-                                                SELECT count(*)
-                                                FROM honoursTeam
-                                                ''')
-    return count_honours_teams['count']
+        tr = conn.transaction()
+        await tr.start()
+        try:
+            await conn.execute('''
+                                UPDATE honoursTeam
+                                SET idPlayer=$1,
+                                idTeam=$2,
+                                strSport=$3,
+                                strPlayer=$4,
+                                strTeam=$5,
+                                strHonour=$6,
+                                strSeason=$7,
+                                intChecked=$8
+                                WHERE idHonoursTeam=$9
+                                ''',
+                               int(honours['idPlayer']),
+                               int(honours['idTeam']),
+                               honours['strSport'],
+                               honours['strPlayer'],
+                               honours['strTeam'],
+                               honours['strHonour'],
+                               honours['strSeason'],
+                               honours['intChecked'],
+                               int(honours['id']))
+            print('updated honours')
+        except:
+            await tr.rollback()
+            raise
+        else:
+            await tr.commit()
 
 
 async def insert_honours_teams(pool: asyncpg.pool.Pool, players: list):
     honours_teams = await get_honours_team_api(pool, players)
-    if await get_honours_team_db(pool) != len(honours_teams):
-        async with pool.acquire() as conn:
-            tr = conn.transaction()
-            await tr.start()
-            try:
-                for honours in honours_teams:
-                    honour_team_exist = await conn.fetchrow('''
-                                            SELECT idHonoursTeam
-                                            FROM honoursTeam
-                                            WHERE idHonoursTeam=$1
-                                            ''', int(honours['id']))
-                    if honour_team_exist is None:
-                        await conn.execute('''
-                                            INSERT INTO honoursTeam(
-                                            idHonoursTeam,
-                                            idPlayer,
-                                            idTeam,
-                                            strSport,
-                                            strPlayer,
-                                            strTeam,
-                                            strHonour,
-                                            strSeason,
-                                            intChecked)
-                                            VALUES(
-                                            $1, $2, $3,
-                                            $4, $5, $6,
-                                            $7, $8, $9
-                                            )
-                                            ''', int(honours['id']),
-                                                    int(honours['idPlayer']),
-                                                    int(honours['idTeam']),
-                                                    honours['strSport'],
-                                                    honours['strPlayer'],
-                                                    honours['strTeam'],
-                                                    honours['strHonour'],
-                                                    honours['strSeason'],
-                                                    honours['intChecked'])
-                        print('honours insert')
-            except:
-                await tr.rollback()
-                raise
-            else:
-                await tr.commit()
+    async with pool.acquire() as conn:
+        tr = conn.transaction()
+        await tr.start()
+        try:
+            for honours in honours_teams:
+                honour_team_exist = await conn.fetchrow('''
+                                        SELECT idHonoursTeam
+                                        FROM honoursTeam
+                                        WHERE idHonoursTeam=$1
+                                        ''', int(honours['id']))
+                if honour_team_exist is None:
+                    await conn.execute('''
+                                        INSERT INTO honoursTeam(
+                                        idHonoursTeam,
+                                        idPlayer,
+                                        idTeam,
+                                        strSport,
+                                        strPlayer,
+                                        strTeam,
+                                        strHonour,
+                                        strSeason,
+                                        intChecked)
+                                        VALUES(
+                                        $1, $2, $3,
+                                        $4, $5, $6,
+                                        $7, $8, $9
+                                        )
+                                        ''', int(honours['id']),
+                                       int(honours['idPlayer']),
+                                       int(honours['idTeam']),
+                                       honours['strSport'],
+                                       honours['strPlayer'],
+                                       honours['strTeam'],
+                                       honours['strHonour'],
+                                       honours['strSeason'],
+                                       honours['intChecked'])
+                    print('honours insert')
+                else:
+                    await update_honours_team(pool, honours)
+        except:
+            await tr.rollback()
+            raise
+        else:
+            await tr.commit()

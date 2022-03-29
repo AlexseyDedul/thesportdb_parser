@@ -224,7 +224,6 @@ async def insert_teams_player(pool: asyncpg.pool.Pool, player: int, team: int):
                                     ''', player, team)
                     print('insert PT')
         except:
-            print('rollback PT')
             await tr.rollback()
             raise
         else:
