@@ -4,6 +4,11 @@ import asyncpg
 
 from thesportsdb.teams import leagueTeams
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 async def get_teams_by_league(leagues: list) -> dict:
     dict_league_teams = {}
@@ -16,20 +21,19 @@ async def get_teams_by_league(leagues: list) -> dict:
             dict_league_teams[i['idleague']] = teams_ids_list
         except:
             continue
+            logger.warning(f"Team not found by league id {i['idleague']}")
     return dict_league_teams
 
 
 async def is_compare_size(pool: asyncpg.pool.Pool, league_team: dict) -> bool:
     async with pool.acquire() as conn:
         count_db = await conn.fetchrow('''
-                        SELECT count(*) FROM team;
-        ''')
-        print(count_db['count'])
+                                        SELECT count(*) FROM team;
+                                        ''')
         count = set()
         for teams in league_team.values():
             for t in teams:
                 count.add(int(t['idTeam']))
-        print(len(count))
         if len(count) == count_db['count']:
             return True
         return False
@@ -121,19 +125,15 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list):
                                            t['strTeamFanart2'],
                                            t['strTeamFanart3'],
                                            t['strTeamFanart4'])
-                        print(f"teams insert {int(t['idTeam'])}")
                     else:
                         await update_team(pool, t)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Team don`t be insert. Exception: {e}")
         else:
             await tr.commit()
-    print("insert_teams")
     if await is_compare_size(pool, dict_league_teams):
         await insert_league_teams(pool, dict_league_teams)
-    else:
-        print("teams doesn`t insert")
 
 
 async def update_team(pool: asyncpg.pool.Pool, team: dict):
@@ -205,10 +205,9 @@ async def update_team(pool: asyncpg.pool.Pool, team: dict):
                                team['strTeamFanart3'],
                                team['strTeamFanart4'],
                                int(team['idTeam']))
-            print('updated team')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Team don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -230,10 +229,9 @@ async def insert_league_teams(pool: asyncpg.pool.Pool, league_team: dict):
                                             INSERT INTO teamLeague(idLeague, idTeam) 
                                             VALUES($1, $2)
                                         ''', item[0], int(team['idTeam']))
-                    print('insert LT')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Team league table don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -241,10 +239,8 @@ async def insert_league_teams(pool: asyncpg.pool.Pool, league_team: dict):
 async def get_teams_ids_list(pool: asyncpg.pool.Pool) -> list:
     async with pool.acquire() as conn:
         while True:
-            teams = await conn.fetch(
-                'SELECT idTeam FROM team')
+            teams = await conn.fetch('SELECT idTeam FROM team')
             if teams:
-                print(f"get_teams_ids_list {len(teams)}")
                 return teams
             else:
                 await asyncio.sleep(30)

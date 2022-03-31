@@ -1,6 +1,10 @@
 import asyncpg.pool
 
 from thesportsdb.players import playersContracts
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_contracts_api(players: list) -> list:
@@ -11,6 +15,7 @@ async def get_contracts_api(players: list) -> list:
             for contract in contracts['contracts']:
                 list_contracts.append(contract)
         except:
+            logger.warning(f"Contract by league id {p['idplayer']} not found.")
             continue
     return list_contracts
 
@@ -42,11 +47,9 @@ async def update_contracts(pool: asyncpg.pool.Pool, contract: dict):
                                contract['strYearEnd'],
                                contract['strWage'],
                                int(contract['id']))
-            print(f"update contract: {int(contract['id'])}")
-
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Contracts don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -91,11 +94,10 @@ async def insert_contracts(pool: asyncpg.pool.Pool, players: list):
                                        contract['strYearStart'],
                                        contract['strYearEnd'],
                                        contract['strWage'])
-                    print('contract insert')
                 else:
                     await update_contracts(pool, contract)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Contracts don`t be insert. Exception: {e}")
         else:
             await tr.commit()

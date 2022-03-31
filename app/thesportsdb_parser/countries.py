@@ -1,4 +1,8 @@
 import asyncpg
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def insert_countries(pool: asyncpg.pool.Pool, countries: dict):
@@ -15,12 +19,11 @@ async def insert_countries(pool: asyncpg.pool.Pool, countries: dict):
                         ''', country['name_en'])
                 else:
                     await update_countries(pool, country)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Countries don`t be insert. Exception: {e}")
         else:
             await tr.commit()
-    print("insert_countries")
 
 
 async def update_countries(pool: asyncpg.pool.Pool, country: dict):
@@ -29,14 +32,13 @@ async def update_countries(pool: asyncpg.pool.Pool, country: dict):
         await tr.start()
         try:
             await conn.execute('''
-                                    UPDATE countries
-                                    SET name_en=$1
-                                    WHERE name_en=$1
-                                    ''', country['name_en'])
-            print('country updated')
-        except:
+                                UPDATE countries
+                                SET name_en=$1
+                                WHERE name_en=$1
+                                ''', country['name_en'])
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Countries don`t be update. Exception: {e}")
         else:
             await tr.commit()
 

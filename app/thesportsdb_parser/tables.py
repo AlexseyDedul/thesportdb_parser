@@ -2,6 +2,10 @@ import asyncpg
 
 from thesportsdb.leagues import leagueSeasonTable
 from thesportsdb.seasons import allSeason
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_tables_api(leagues: list) -> list:
@@ -15,8 +19,10 @@ async def get_tables_api(leagues: list) -> list:
                     for t in table['table']:
                         tables.append(t)
                 except:
+                    logger.warning(f"Table not found by id league: {i['idleague']} and id season: {s['strSeason']}")
                     continue
         except:
+            logger.warning(f"Season not found by id season: {s['strSeason']}")
             continue
     return tables
 
@@ -74,16 +80,13 @@ async def insert_tables(pool: asyncpg.pool.Pool, leagues: list):
                                        int(t['intGoalDifference']) if t['intGoalDifference'] is not None else 0,
                                        int(t['intPoints']) if t['intPoints'] is not None else 0,
                                        t['dateUpdated'])
-                    print(f"tables insert {len(tables)}")
                 else:
                     await update_tables(pool, t)
-        except:
-            print('tables rollback')
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Tables don`t be insert. Exception: {e}")
         else:
             await tr.commit()
-        print("insert_tables")
 
 
 async def update_tables(pool: asyncpg.pool.Pool, table: dict):
@@ -127,9 +130,8 @@ async def update_tables(pool: asyncpg.pool.Pool, table: dict):
                                int(table['intPoints']) if table['intPoints'] is not None else 0,
                                table['dateUpdated'],
                                int(table['idStanding']))
-            print('table updated')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Tables don`t be update. Exception: {e}")
         else:
             await tr.commit()

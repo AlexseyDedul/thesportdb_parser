@@ -1,6 +1,10 @@
 import asyncpg
 
 from thesportsdb.players import playersHonours
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_honours_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
@@ -18,6 +22,7 @@ async def get_honours_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
                     if team_exist is not None:
                         list_honours.append(honour)
             except:
+                logger.warning(f"Honours team not found by id player: {p['idplayer']}")
                 continue
     return list_honours
 
@@ -48,10 +53,9 @@ async def update_honours_team(pool: asyncpg.pool.Pool, honours: dict):
                                honours['strSeason'],
                                honours['intChecked'],
                                int(honours['id']))
-            print('updated honours')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Honours team don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -94,11 +98,10 @@ async def insert_honours_teams(pool: asyncpg.pool.Pool, players: list):
                                        honours['strHonour'],
                                        honours['strSeason'],
                                        honours['intChecked'])
-                    print('honours insert')
                 else:
                     await update_honours_team(pool, honours)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Honours team don`t be insert. Exception: {e}")
         else:
             await tr.commit()

@@ -3,6 +3,10 @@ import asyncpg
 from app.thesportsdb_parser.leagues import get_leagues_ids_list
 from thesportsdb.events import leagueSeasonEvents, eventStatistics
 from thesportsdb.seasons import allSeason
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_events_api(pool: asyncpg.pool.Pool) -> list:
@@ -30,6 +34,7 @@ async def get_events_api(pool: asyncpg.pool.Pool) -> list:
                                 list_events.append(e)
                     except:
                         continue
+                        logger.warning(f"Don`t have events by league: {i['idleague']} and season: {s['strSeason']}")
             except:
                 continue
     return list_events
@@ -135,9 +140,9 @@ async def insert_events(pool: asyncpg.pool.Pool, list_events: list = None):
                                        e['strLocked'])
                 else:
                     await update_event(pool, e)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Events don`t be insert. Exception: {e}")
         else:
             await tr.commit()
         print("insertEvents")
@@ -185,7 +190,7 @@ async def update_event(pool: asyncpg.pool.Pool, event: dict):
                                 strPostponed=$33,
                                 strLocked=$34
                                 WHERE idevent=$35
-                        ''',
+                            ''',
                                int(event['idLeague']),
                                event['strSport'],
                                event['strEvent'],
@@ -220,10 +225,10 @@ async def update_event(pool: asyncpg.pool.Pool, event: dict):
                                event['strStatus'],
                                event['strPostponed'],
                                event['strLocked'],
-                               int(event['idEvent']), )
-            print('updated event')
-        except:
+                               int(event['idEvent']))
+        except Exception as e:
             await tr.rollback()
+            logger.error(f"Transaction rollback. Events don`t be update. Exception: {e}")
             raise
         else:
             await tr.commit()
@@ -239,6 +244,7 @@ async def get_event_stats_api(event_ids: list):
                     list_event_stats.append(event_stat)
             except:
                 continue
+                logger.warning(f"Event statistics not found by event id {event['idevent']}")
     return list_event_stats
 
 
@@ -262,10 +268,9 @@ async def update_event_stats(pool: asyncpg.pool.Pool, event_stat: dict):
                                int(event_stat['intHome']),
                                int(event_stat['intAway']),
                                int(event_stat['idStatistic']))
-            print("insert eventStats")
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Event statistics don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -300,11 +305,10 @@ async def insert_event_stats(pool: asyncpg.pool.Pool, event_ids: list = None):
                                        event_stat['strStat'],
                                        int(event_stat['intHome']),
                                        int(event_stat['intAway']))
-                    print("insert eventStats")
                 else:
                     await update_event_stats(pool, event_stat)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Event statistics don`t be insert. Exception: {e}")
         else:
             await tr.commit()

@@ -10,7 +10,7 @@ pipenv install Pipfile
 
 Create ENV-file (check example in .env_example file):
 
-echo HOST="localhost", USER="user_name", PASS="user_password", DB="database_name" > .env
+echo HOST="localhost" USER="user_name" PASS="user_password" DB="database_name" > .env
 
 Run application:
 

@@ -1,17 +1,21 @@
 import asyncpg
 
 from thesportsdb.leagues import leagueInfo
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_leagues_api(leagues: list) -> list:
     league_list = []
-    print(leagues)
     for league in leagues['leagues']:
         try:
             league_info = await leagueInfo(league['idLeague'])
             for l in league_info['leagues']:
                 league_list.append(l)
         except:
+            logger.warning(f"Leagues info not found by league id: {league['idLeague']}")
             continue
     return league_list
 
@@ -90,12 +94,11 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                 else:
                     await update_leagues(pool, league)
 
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. League don`t be insert. Exception: {e}")
         else:
             await tr.commit()
-    print("insertLeagues end methods")
 
 
 async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
@@ -105,34 +108,33 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
         try:
             await conn.execute('''
                                 UPDATE league
-                                SET 
-                                        strSport=$1,
-                                        strLeague=$2,
-                                        strLeagueAlternate=$3,
-                                        intDivision=$4,
-                                        strCurrentSeason=$5,
-                                        intFormedYear=$6,
-                                        dateFirstEvent=$7,
-                                        strCountry=$8,
-                                        strWebsite=$9,
-                                        strFacebook=$10,
-                                        strTwitter=$11,
-                                        strYoutube=$12,
-                                        strRSS=$13,
-                                        strDescriptionEN=$14,
-                                        strDescriptionRU=$15,
-                                        strTvRights=$16,
-                                        strFanart1=$17,
-                                        strFanart2=$18,
-                                        strFanart3=$19,
-                                        strFanart4=$20,
-                                        strBanner=$21,
-                                        strBadge=$22,
-                                        strLogo=$23,
-                                        strPoster=$24,
-                                        strTrophy=$25,
-                                        strNaming=$26,
-                                        strComplete=$27
+                                SET strSport=$1,
+                                strLeague=$2,
+                                strLeagueAlternate=$3,
+                                intDivision=$4,
+                                strCurrentSeason=$5,
+                                intFormedYear=$6,
+                                dateFirstEvent=$7,
+                                strCountry=$8,
+                                strWebsite=$9,
+                                strFacebook=$10,
+                                strTwitter=$11,
+                                strYoutube=$12,
+                                strRSS=$13,
+                                strDescriptionEN=$14,
+                                strDescriptionRU=$15,
+                                strTvRights=$16,
+                                strFanart1=$17,
+                                strFanart2=$18,
+                                strFanart3=$19,
+                                strFanart4=$20,
+                                strBanner=$21,
+                                strBadge=$22,
+                                strLogo=$23,
+                                strPoster=$24,
+                                strTrophy=$25,
+                                strNaming=$26,
+                                strComplete=$27
                                 WHERE idleague=$28
                             ''',
                                league["strSport"],
@@ -163,10 +165,9 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
                                league["strNaming"],
                                league["strComplete"],
                                int(league["idLeague"]))
-            print("league updated")
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. League don`t be update. Exception: {e}")
         else:
             await tr.commit()
 

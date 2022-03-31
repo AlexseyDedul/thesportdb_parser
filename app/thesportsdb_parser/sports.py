@@ -1,4 +1,10 @@
+import asyncio
+
 import asyncpg
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def update_sport(pool: asyncpg.pool.Pool, sport: dict):
@@ -11,10 +17,9 @@ async def update_sport(pool: asyncpg.pool.Pool, sport: dict):
                                 SET strSport=$1, strFormat=$2 
                                 WHERE idSport=$3
                             ''', sport['strSport'], sport['strFormat'], int(sport['idSport']))
-            print(f"insert sport {int(sport['idSport'])}")
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Sport don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -33,9 +38,9 @@ async def insert_sports(pool: asyncpg.pool.Pool, sports: dict):
                         ''', int(i['idSport']), i['strSport'], i['strFormat'])
                 else:
                     await update_sport(pool, i)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Sport don`t be insert. Exception: {e}")
         else:
             await tr.commit()
-        print("insertSports")
+    await asyncio.sleep(30)

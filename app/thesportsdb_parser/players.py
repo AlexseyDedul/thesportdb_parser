@@ -2,6 +2,10 @@ import asyncpg
 
 from app.thesportsdb_parser.teams import get_teams_ids_list
 from thesportsdb.players import teamPlayers
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_players_api(pool: asyncpg.pool.Pool) -> list:
@@ -13,6 +17,7 @@ async def get_players_api(pool: asyncpg.pool.Pool) -> list:
             for p in player['player']:
                 list_players.append(p)
         except:
+            logger.warning(f"PLayer not found by id team: {t['idteam']}")
             continue
     return list_players
 
@@ -106,15 +111,13 @@ async def insert_players(pool: asyncpg.pool.Pool):
                                    p['strFanart2'],
                                    p['strFanart3'],
                                    p['strFanart4'])
-                    print("players insert")
                 else:
                     await update_player(pool, p)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Player don`t be insert. Exception: {e}")
         else:
             await tr.commit()
-        print("insert_players")
     await check_teams_in_player(pool, players)
 
 
@@ -188,10 +191,9 @@ async def update_player(pool: asyncpg.pool.Pool, player: dict):
                                player['strFanart3'],
                                player['strFanart4'],
                                int(player['idPlayer']))
-            print("updated player")
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Player don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -222,9 +224,8 @@ async def insert_teams_player(pool: asyncpg.pool.Pool, player: int, team: int):
                                         INSERT INTO playerTeam(idPlayer, idTeam) 
                                         VALUES($1, $2)
                                     ''', player, team)
-                    print('insert PT')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. TeamPlayer table don`t be insert. Exception: {e}")
         else:
             await tr.commit()

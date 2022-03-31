@@ -1,27 +1,31 @@
 import asyncpg
+import logging
 
 
-class Database():
+logger = logging.getLogger(__name__)
+
+
+class Database:
     def __init__(self, user: str, password: str, database: str, host: str):
         if user is not None:
             self.user = user
         else:
-            print("User none")
+            logger.error("User db not found.")
 
         if password is not None:
             self.password = password
         else:
-            print("Pass none")
+            logger.error("Password db not found.")
 
         if database is not None:
             self.database = database
         else:
-            print("DB none")
+            logger.error("Database db not found.")
 
         if host is not None:
             self.host = host
         else:
-            print("Host none")
+            logger.error("Host db not found.")
 
         self.pool = None
 
@@ -295,47 +299,51 @@ class Database():
                 raise
             else:
                 await tr.commit()
-            print("create")
+            logger.info("Tables created.")
 
     async def get_pool_connection(self) -> asyncpg.pool.Pool:
         try:
-            # print(self.user,self.password,self.database,self.host)
             self.pool = await asyncpg.create_pool(user=self.user,
                                              password=self.password,
                                              database=self.database,
                                              host=self.host)
-
-            # await self.drop_tables()
-            # await self.create_tables()
             return self.pool
         except:
-            print("Pool connection doesn`t created.")
+            logger.error("Pool connection doesn`t create.")
 
     async def drop_tables(self):
         async with self.pool.acquire() as conn:
             tr = conn.transaction()
             await tr.start()
             try:
-                pass
-                # await conn.execute('''
-                #
-                #                     ''')
-            except:
+                await conn.execute('''
+                                    DROP TABLE IF EXISTS contract;
+                                    DROP TABLE IF EXISTS countries;
+                                    DROP TABLE IF EXISTS events CASCADE;
+                                    DROP TABLE IF EXISTS eventStats CASCADE;
+                                    DROP TABLE IF EXISTS formerteam;
+                                    DROP TABLE IF EXISTS channel CASCADE;
+                                    DROP TABLE IF EXISTS eventTV CASCADE;
+                                    DROP TABLE IF EXISTS timeline;
+                                    DROP TABLE IF EXISTS lineup;
+                                    DROP TABLE IF EXISTS honoursteam;
+                                    DROP TABLE IF EXISTS playerteam;
+                                    DROP TABLE IF EXISTS league CASCADE;
+                                    DROP TABLE IF EXISTS player CASCADE;
+                                    DROP TABLE IF EXISTS sports CASCADE;
+                                    DROP TABLE IF EXISTS tables CASCADE;
+                                    DROP TABLE IF EXISTS team CASCADE;
+                                    DROP TABLE IF EXISTS teamleague CASCADE;
+                                    ''')
+            except Exception as e:
                 await tr.rollback()
-                raise
+                logger.error(f"Error: {e}")
             else:
                 await tr.commit()
-        print("drop")
-        # '''
-        # DROP TABLE IF EXISTS eventStats;
-        #                             DROP TABLE IF EXISTS channel cascade;
-        #                             DROP TABLE IF EXISTS eventTV;
-        #                             DROP TABLE IF EXISTS timeline;
-        #                             DROP TABLE IF EXISTS lineup;
-        # '''
+        logger.info("Drop tables")
 
     async def delete_pool_connection(self, pool):
         await self.drop_tables()
         await pool.close()
-        if (await self.pool == None):
-            print("Pool close")
+        if await self.pool is None:
+            logger.info("Pool closed")

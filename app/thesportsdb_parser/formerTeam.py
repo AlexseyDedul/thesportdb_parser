@@ -1,6 +1,10 @@
 import asyncpg
 
 from thesportsdb.players import playersFormerTeam
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_former_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
@@ -18,6 +22,7 @@ async def get_former_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
                     if team_exist is not None:
                         list_former.append(former)
             except:
+                logger.warning(f"Former team not found by id player {p['idplayer']}")
                 continue
     return list_former
 
@@ -50,10 +55,9 @@ async def update_former_team(pool: asyncpg.pool.Pool, former: dict):
                                former['strJoined'],
                                former['strDeparted'],
                                int(former['id']))
-            print('updated former team')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Former team don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -99,11 +103,10 @@ async def insert_former_teams(pool: asyncpg.pool.Pool, players: list):
                                        former['strTeamBadge'],
                                        former['strJoined'],
                                        former['strDeparted'])
-                    print('former insert')
                 else:
                     await update_former_team(pool, former)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Former team don`t be insert. Exception: {e}")
         else:
             await tr.commit()

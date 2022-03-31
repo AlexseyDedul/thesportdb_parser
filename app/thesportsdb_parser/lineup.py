@@ -2,6 +2,10 @@ import asyncpg
 
 from app.thesportsdb_parser.events import get_event_ids_db
 from thesportsdb.events import eventLineup
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_lineup_api(events: list) -> list:
@@ -13,6 +17,7 @@ async def get_lineup_api(events: list) -> list:
                 for lineup in lineups['lineup']:
                     list_lineups.append(lineup)
             except:
+                logger.warning(f"Lineup not found by id event: {event['idevent']}")
                 continue
     return list_lineups
 
@@ -51,10 +56,9 @@ async def update_lineups(pool: asyncpg.pool.Pool, lineup: dict):
                                lineup['strCountry'],
                                lineup['strSeason'],
                                int(lineup['idLineup']))
-            print("updated lineup")
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Lineup don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -109,11 +113,10 @@ async def insert_lineups(pool: asyncpg.pool.Pool, events_ids: list = None):
                                        lineup['intSquadNumber'],
                                        lineup['strCountry'],
                                        lineup['strSeason'])
-                    print("insert lineup")
                 else:
                     await update_lineups(pool, lineup)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Lineup don`t be insert. Exception: {e}")
         else:
             await tr.commit()

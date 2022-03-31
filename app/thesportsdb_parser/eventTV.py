@@ -2,6 +2,10 @@ import asyncpg
 
 from app.thesportsdb_parser.events import get_event_ids_db
 from thesportsdb.events import eventTVByEvent
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_events_tv_api(events: list) -> list:
@@ -13,6 +17,7 @@ async def get_events_tv_api(events: list) -> list:
                 for event_tv in events_tv['tvevent']:
                     list_events_tv.append(event_tv)
             except:
+                logger.warning(f"Event TV not found by event id: {event['idevent']}")
                 continue
     return list_events_tv
 
@@ -29,10 +34,9 @@ async def update_channel(pool: asyncpg.pool.Pool, event: dict):
                                 ''',
                                event['strChannel'],
                                int(event['idChannel']))
-            print('updated channel')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Channel don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -58,12 +62,11 @@ async def insert_channel(pool: asyncpg.pool.Pool, events: list):
                                             )
                                         ''', int(event['idChannel']),
                                        event['strChannel'])
-                    print('insert channel')
                 else:
                     await update_channel(pool, event)
         except:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Channel don`t be insert. Exception: {e}")
         else:
             await tr.commit()
 
@@ -94,10 +97,9 @@ async def update_events_tv(pool: asyncpg.pool.Pool, event: dict):
                                event['dateEvent'],
                                event['strTimeStamp'],
                                int(event['id']))
-            print('update event tv')
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Event TV don`t be update. Exception: {e}")
         else:
             await tr.commit()
 
@@ -143,11 +145,10 @@ async def insert_events_tv(pool: asyncpg.pool.Pool, events_ids: list = None):
                                        event['strTime'],
                                        event['dateEvent'],
                                        event['strTimeStamp'])
-                    print('insert event tv')
                 else:
                     await update_events_tv(pool, event)
-        except:
+        except Exception as e:
             await tr.rollback()
-            raise
+            logger.error(f"Transaction rollback. Event TV don`t be insert. Exception: {e}")
         else:
             await tr.commit()

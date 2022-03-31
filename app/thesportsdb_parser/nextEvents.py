@@ -6,17 +6,22 @@ from app.thesportsdb_parser.leagues import get_leagues_ids_list
 from app.thesportsdb_parser.lineup import insert_lineups
 from app.thesportsdb_parser.timeline import insert_timeline
 from thesportsdb.events import nextLeagueEvents
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_next_events_api(pool: asyncpg.pool.Pool) -> list:
     leagues = await get_leagues_ids_list(pool)
     events_list = []
-    for league in leagues[:10]:
+    for league in leagues:
         try:
             events = await nextLeagueEvents(str(league['idleague']))
             for event in events['events']:
                 events_list.append(event)
         except:
+            logger.warning(f"Next 15 event not found by league id: {league['idleague']}")
             continue
     return events_list
 
