@@ -253,7 +253,7 @@ class Database:
                                     CREATE TABLE IF NOT EXISTS eventTV(
                                         id integer PRIMARY KEY,
                                         idEvent integer REFERENCES events (idEvent),
-                                        idChannel integer REFERENCES channel (idChannel),
+                                        idChannel integer,
                                         strCountry text,
                                         strLogo text,
                                         strSeason text,
@@ -299,7 +299,7 @@ class Database:
                 raise
             else:
                 await tr.commit()
-            logger.info("Tables created.")
+                logger.info("Tables created.")
 
     async def get_pool_connection(self) -> asyncpg.pool.Pool:
         try:
@@ -309,7 +309,7 @@ class Database:
                                              host=self.host)
             return self.pool
         except:
-            logger.error("Pool connection doesn`t create.")
+            logger.error("Pool connection doesn`t create. Check correctly connection data in .env file.")
 
     async def drop_tables(self):
         async with self.pool.acquire() as conn:
@@ -319,7 +319,10 @@ class Database:
                 await conn.execute('''
                                     DROP TABLE IF EXISTS contract;
                                     DROP TABLE IF EXISTS countries;
-                                    DROP TABLE IF EXISTS events CASCADE;
+                                     DROP TABLE IF EXISTS events CASCADE;
+                                     DROP TABLE IF EXISTS sports CASCADE;
+                                    DROP TABLE IF EXISTS league CASCADE;
+                                     DROP TABLE IF EXISTS team CASCADE;
                                     DROP TABLE IF EXISTS eventStats CASCADE;
                                     DROP TABLE IF EXISTS formerteam;
                                     DROP TABLE IF EXISTS channel CASCADE;
@@ -328,13 +331,13 @@ class Database:
                                     DROP TABLE IF EXISTS lineup;
                                     DROP TABLE IF EXISTS honoursteam;
                                     DROP TABLE IF EXISTS playerteam;
-                                    DROP TABLE IF EXISTS league CASCADE;
                                     DROP TABLE IF EXISTS player CASCADE;
-                                    DROP TABLE IF EXISTS sports CASCADE;
+                                    
                                     DROP TABLE IF EXISTS tables CASCADE;
-                                    DROP TABLE IF EXISTS team CASCADE;
                                     DROP TABLE IF EXISTS teamleague CASCADE;
                                     ''')
+                # ''''
+                #                     '''
             except Exception as e:
                 await tr.rollback()
                 logger.error(f"Error: {e}")

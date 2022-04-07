@@ -35,21 +35,21 @@ async def run():
     leagues = await get_leagues_ids_list(pool)
     await asyncio.create_task(insert_teams(pool, leagues)),
     await asyncio.create_task(insert_events(pool)),
-    # await asyncio.create_task(insert_players(pool))
-    # players = await get_list_players_db(pool)
-    # await asyncio.gather(
-    #     asyncio.create_task(insert_tables(pool, leagues)),
-    #     asyncio.create_task(insert_contracts(pool, players)),
-    #     asyncio.create_task(insert_former_teams(pool, players)),
-    #     asyncio.create_task(insert_honours_teams(pool, players)),
-    #     asyncio.create_task(insert_event_stats(pool)),
-    await asyncio.create_task(insert_events_tv(pool)),
-    #     asyncio.create_task(insert_timeline(pool)),
-    #     asyncio.create_task(insert_lineups(pool))
-    # )
-    #
-    # while True:
-    #     await work_with_events(pool)
+    await asyncio.create_task(insert_players(pool))
+    players = await get_list_players_db(pool)
+    await asyncio.gather(
+        asyncio.create_task(insert_tables(pool, leagues)),
+        asyncio.create_task(insert_contracts(pool, players)),
+        asyncio.create_task(insert_former_teams(pool, players)),
+        asyncio.create_task(insert_honours_teams(pool, players)),
+        asyncio.create_task(insert_event_stats(pool)),
+        asyncio.create_task(insert_events_tv(pool)),
+        asyncio.create_task(insert_timeline(pool)),
+        asyncio.create_task(insert_lineups(pool))
+    )
+
+    while True:
+        await work_with_events(pool)
 
     print(time() - t0)
 

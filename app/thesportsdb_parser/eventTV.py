@@ -47,24 +47,25 @@ async def insert_channel(pool: asyncpg.pool.Pool, events: list):
         await tr.start()
         try:
             for event in events:
-                channel_exist = await conn.fetchrow('''
-                                                    SELECT idChannel
-                                                    FROM channel
-                                                    WHERE idChannel=$1
-                                                    ''', int(event['idChannel']))
-                if channel_exist is None:
-                    await conn.execute('''
-                                        INSERT INTO channel(
-                                            idChannel,
-                                            strChannel)
-                                            VALUES(
-                                            $1, $2
-                                            )
-                                        ''', int(event['idChannel']),
-                                       event['strChannel'])
-                else:
-                    await update_channel(pool, event)
-        except:
+                if event['idChannel'] is not None:
+                    channel_exist = await conn.fetchrow('''
+                                                        SELECT *
+                                                        FROM channel
+                                                        WHERE idChannel=$1
+                                                        ''', int(event['idChannel']))
+                    if channel_exist is None:
+                        await conn.execute('''
+                                            INSERT INTO channel(
+                                                idChannel,
+                                                strChannel)
+                                                VALUES(
+                                                $1, $2
+                                                )
+                                            ''', int(event['idChannel']),
+                                           event['strChannel'])
+                    else:
+                        await update_channel(pool, event)
+        except Exception as e:
             await tr.rollback()
             logger.error(f"Transaction rollback. Channel don`t be insert. Exception: {e}")
         else:
@@ -89,7 +90,7 @@ async def update_events_tv(pool: asyncpg.pool.Pool, event: dict):
                                 WHERE id=$9
                                 ''',
                                int(event['idEvent']),
-                               int(event['idChannel']),
+                               int(event['idChannel']) if int(event['idChannel']) is not None else 0,
                                event['strCountry'],
                                event['strLogo'],
                                event['strSeason'],
@@ -138,7 +139,7 @@ async def insert_events_tv(pool: asyncpg.pool.Pool, events_ids: list = None):
                                         )
                                         ''', int(event['id']),
                                        int(event['idEvent']),
-                                       int(event['idChannel']),
+                                       int(event['idChannel']) if int(event['idChannel']) is not None else 0,
                                        event['strCountry'],
                                        event['strLogo'],
                                        event['strSeason'],
