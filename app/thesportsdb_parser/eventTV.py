@@ -13,11 +13,15 @@ async def get_events_tv_api(events: list) -> list:
     if events:
         for event in events:
             try:
-                events_tv = await eventTVByEvent(str(event['idevent']))
+                try:
+                    id_event = str(event['idEvent'])
+                except KeyError:
+                    id_event = str(event['idevent'])
+                events_tv = await eventTVByEvent(id_event)
                 for event_tv in events_tv['tvevent']:
                     list_events_tv.append(event_tv)
             except:
-                logger.warning(f"Event TV not found by event id: {event['idevent']}")
+                logger.warning(f"Event TV not found by event id: {id_event}")
                 continue
     return list_events_tv
 
@@ -29,7 +33,7 @@ async def update_channel(pool: asyncpg.pool.Pool, event: dict):
         try:
             await conn.execute('''
                                 UPDATE channel
-                                SET strChannel=$1,
+                                SET strChannel=$1
                                 WHERE idChannel=$2
                                 ''',
                                event['strChannel'],

@@ -9,34 +9,38 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+async def is_teams_exist(pool: asyncpg.pool.Pool, e: dict) -> bool:
+    async with pool.acquire() as conn:
+        team_home_exist = await conn.fetchrow('''
+                                                SELECT idTeam 
+                                                FROM team
+                                                WHERE idTeam=$1
+                                                ''', int(e['idHomeTeam']))
+        team_away_exist = await conn.fetchrow('''
+                                                SELECT idTeam 
+                                                FROM team
+                                                WHERE idTeam=$1
+                                                ''', int(e['idAwayTeam']))
+        return team_away_exist is not None and team_home_exist is not None
+
+
 async def get_events_api(pool: asyncpg.pool.Pool) -> list:
     leagues = await get_leagues_ids_list(pool)
     list_events = []
-    async with pool.acquire() as conn:
-        for i in leagues:
-            try:
-                seasons = await allSeason(str(i['idleague']))
-                for s in seasons['seasons']:
-                    try:
-                        events = await leagueSeasonEvents(str(i['idleague']), s['strSeason'])
-                        for e in events['events']:
-                            team_home_exist = await conn.fetchrow('''
-                                                            SELECT idTeam 
-                                                            FROM team
-                                                            WHERE idTeam=$1
-                                                            ''', int(e['idHomeTeam']))
-                            team_away_exist = await conn.fetchrow('''
-                                                            SELECT idTeam 
-                                                            FROM team
-                                                            WHERE idTeam=$1
-                                                            ''', int(e['idAwayTeam']))
-                            if team_away_exist is not None and team_home_exist is not None:
-                                list_events.append(e)
-                    except:
-                        continue
-                        logger.warning(f"Don`t have events by league: {i['idleague']} and season: {s['strSeason']}")
-            except:
-                continue
+    for i in leagues:
+        try:
+            seasons = await allSeason(str(i['idleague']))
+            for s in seasons['seasons']:
+                try:
+                    events = await leagueSeasonEvents(str(i['idleague']), s['strSeason'])
+                    for e in events['events']:
+                        if await is_teams_exist(pool, e):
+                            list_events.append(e)
+                except:
+                    continue
+                    logger.warning(f"Don`t have events by league: {i['idleague']} and season: {s['strSeason']}")
+        except:
+            continue
     return list_events
 
 
@@ -55,94 +59,95 @@ async def insert_events(pool: asyncpg.pool.Pool, list_events: list = None):
         await tr.start()
         try:
             for e in list_events:
-                event_exist = await conn.fetchrow('''SELECT idevent 
-                                                    FROM events 
-                                                    WHERE idevent=$1''', int(e['idEvent']))
-                if event_exist is None:
-                    await conn.execute('''
-                                INSERT INTO events(
-                                idEvent,
-                                idLeague,
-                                strSport,
-                                strEvent,
-                                strEventAlternate,
-                                idHomeTeam,
-                                idAwayTeam,
-                                strFilename,
-                                strSeason,
-                                strDescriptionEN,
-                                intHomeScore,
-                                intRound,
-                                intAwayScore,
-                                intSpectators,
-                                strOfficial,
-                                strTimestamp,
-                                dateEvent,
-                                dateEventLocal,
-                                strTime,
-                                strTimeLocal,
-                                strTVStation,
-                                strResult,
-                                strVenue,
-                                strCountry,
-                                strCity,
-                                strPoster,
-                                strSquare,
-                                strFanart,
-                                strThumb,
-                                strBanner,
-                                strMap,
-                                strVideo,
-                                strStatus,
-                                strPostponed,
-                                strLocked
-                                ) VALUES(
-                                $1, $2, $3, $4, $5, $6, $7, $8,
-                                $9, $10, $11, $12, $13, $14, $15, $16,
-                                $17, $18, $19, $20, $21, $22, $23, $24,
-                                $25, $26, $27, $28, $29, $30, $31, $32,
-                                $33, $34, $35
-                                )
-                            ''', int(e['idEvent']),
-                                       int(e['idLeague']),
-                                       e['strSport'],
-                                       e['strEvent'],
-                                       e['strEventAlternate'],
-                                       int(e['idHomeTeam']),
-                                       int(e['idAwayTeam']),
-                                       e['strFilename'],
-                                       e['strSeason'],
-                                       e['strDescriptionEN'],
-                                       int(e['intHomeScore']) if e['intHomeScore'] is not None else 0,
-                                       int(e['intRound']) if e['intRound'] is not None else 0,
-                                       int(e['intAwayScore']) if e['intAwayScore'] is not None else 0,
-                                       int(e['intSpectators']) if e['intSpectators'] is not None else 0,
-                                       e['strOfficial'],
-                                       e['strTimestamp'],
-                                       e['dateEvent'],
-                                       e['dateEventLocal'],
-                                       e['strTime'],
-                                       e['strTimeLocal'],
-                                       e['strTVStation'],
-                                       e['strResult'],
-                                       e['strVenue'],
-                                       e['strCountry'],
-                                       e['strCity'],
-                                       e['strPoster'],
-                                       e['strSquare'],
-                                       e['strFanart'],
-                                       e['strThumb'],
-                                       e['strBanner'],
-                                       e['strMap'],
-                                       e['strVideo'],
-                                       e['strStatus'],
-                                       e['strPostponed'],
-                                       e['strLocked'])
-                else:
-                    await update_event(pool, e)
-        except Exception as e:
+                if await is_teams_exist(pool, e):
+                    event_exist = await conn.fetchrow('''SELECT idevent 
+                                                        FROM events 
+                                                        WHERE idevent=$1''', int(e['idEvent']))
+                    if event_exist is None:
+                        await conn.execute('''
+                                    INSERT INTO events(
+                                    idEvent,
+                                    idLeague,
+                                    strSport,
+                                    strEvent,
+                                    strEventAlternate,
+                                    idHomeTeam,
+                                    idAwayTeam,
+                                    strFilename,
+                                    strSeason,
+                                    strDescriptionEN,
+                                    intHomeScore,
+                                    intRound,
+                                    intAwayScore,
+                                    intSpectators,
+                                    strOfficial,
+                                    strTimestamp,
+                                    dateEvent,
+                                    dateEventLocal,
+                                    strTime,
+                                    strTimeLocal,
+                                    strTVStation,
+                                    strResult,
+                                    strVenue,
+                                    strCountry,
+                                    strCity,
+                                    strPoster,
+                                    strSquare,
+                                    strFanart,
+                                    strThumb,
+                                    strBanner,
+                                    strMap,
+                                    strVideo,
+                                    strStatus,
+                                    strPostponed,
+                                    strLocked
+                                    ) VALUES(
+                                    $1, $2, $3, $4, $5, $6, $7, $8,
+                                    $9, $10, $11, $12, $13, $14, $15, $16,
+                                    $17, $18, $19, $20, $21, $22, $23, $24,
+                                    $25, $26, $27, $28, $29, $30, $31, $32,
+                                    $33, $34, $35
+                                    )
+                                ''', int(e['idEvent']),
+                                           int(e['idLeague']),
+                                           e['strSport'],
+                                           e['strEvent'],
+                                           e['strEventAlternate'],
+                                           int(e['idHomeTeam']),
+                                           int(e['idAwayTeam']),
+                                           e['strFilename'],
+                                           e['strSeason'],
+                                           e['strDescriptionEN'],
+                                           int(e['intHomeScore']) if e['intHomeScore'] is not None else 0,
+                                           int(e['intRound']) if e['intRound'] is not None else 0,
+                                           int(e['intAwayScore']) if e['intAwayScore'] is not None else 0,
+                                           int(e['intSpectators']) if e['intSpectators'] is not None else 0,
+                                           e['strOfficial'],
+                                           e['strTimestamp'],
+                                           e['dateEvent'],
+                                           e['dateEventLocal'],
+                                           e['strTime'],
+                                           e['strTimeLocal'],
+                                           e['strTVStation'],
+                                           e['strResult'],
+                                           e['strVenue'],
+                                           e['strCountry'],
+                                           e['strCity'],
+                                           e['strPoster'],
+                                           e['strSquare'],
+                                           e['strFanart'],
+                                           e['strThumb'],
+                                           e['strBanner'],
+                                           e['strMap'],
+                                           e['strVideo'],
+                                           e['strStatus'],
+                                           e['strPostponed'],
+                                           e['strLocked'])
+                    else:
+                        await update_event(pool, e)
+        except Exception as exept:
             await tr.rollback()
-            logger.error(f"Transaction rollback. Events don`t be insert. Exception: {e}")
+            logger.error(f"Transaction rollback. Events ({e['idEvent']}{e['idHomeTeam']}{e['idAwayTeam']}) don`t be insert. Exception: {exept}")
         else:
             await tr.commit()
         print("insertEvents")
@@ -239,12 +244,16 @@ async def get_event_stats_api(event_ids: list):
     if len(event_ids) != 0:
         for event in event_ids:
             try:
-                event_stats = await eventStatistics(str(event['idevent']))
+                try:
+                    id_event = str(event['idEvent'])
+                except KeyError:
+                    id_event = str(event['idevent'])
+                event_stats = await eventStatistics(id_event)
                 for event_stat in event_stats['eventstats']:
                     list_event_stats.append(event_stat)
             except:
+                logger.warning(f"Event statistics not found by event id {id_event}")
                 continue
-                logger.warning(f"Event statistics not found by event id {event['idevent']}")
     return list_event_stats
 
 

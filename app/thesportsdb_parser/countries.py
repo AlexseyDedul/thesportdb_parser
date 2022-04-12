@@ -1,3 +1,5 @@
+import asyncio
+
 import asyncpg
 import logging
 
@@ -24,6 +26,7 @@ async def insert_countries(pool: asyncpg.pool.Pool, countries: dict):
             logger.error(f"Transaction rollback. Countries don`t be insert. Exception: {e}")
         else:
             await tr.commit()
+    await asyncio.sleep(30)
 
 
 async def update_countries(pool: asyncpg.pool.Pool, country: dict):

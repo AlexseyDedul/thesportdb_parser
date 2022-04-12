@@ -13,11 +13,15 @@ async def get_lineup_api(events: list) -> list:
     if events:
         for event in events:
             try:
-                lineups = await eventLineup(str(event['idevent']))
+                try:
+                    id_event = str(event['idEvent'])
+                except KeyError:
+                    id_event = str(event['idevent'])
+                lineups = await eventLineup(id_event)
                 for lineup in lineups['lineup']:
                     list_lineups.append(lineup)
             except:
-                logger.warning(f"Lineup not found by id event: {event['idevent']}")
+                logger.warning(f"Lineup not found by id event: {id_event}")
                 continue
     return list_lineups
 
