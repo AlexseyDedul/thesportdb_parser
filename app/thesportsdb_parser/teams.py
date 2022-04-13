@@ -15,13 +15,14 @@ async def get_teams_by_league(leagues: list) -> dict:
     for i in leagues:
         try:
             teams = await leagueTeams(str(i['idleague']))
-            teams_ids_list = []
-            for t in teams['teams']:
-                teams_ids_list.append(t)
-            dict_league_teams[i['idleague']] = teams_ids_list
+            if teams is not None:
+                teams_ids_list = []
+                for t in teams['teams']:
+                    teams_ids_list.append(t)
+                dict_league_teams[i['idleague']] = teams_ids_list
         except:
-            continue
             logger.warning(f"Team not found by league id {i['idleague']}")
+            continue
     return dict_league_teams
 
 

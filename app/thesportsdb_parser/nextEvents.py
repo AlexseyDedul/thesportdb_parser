@@ -20,9 +20,10 @@ async def get_next_events_api(pool: asyncpg.pool.Pool) -> list:
     for league in leagues:
         try:
             events = await nextLeagueEvents(str(league['idleague']))
-            for event in events['events']:
-                if await is_teams_exist(pool, event):
-                    events_list.append(event)
+            if events is not None:
+                for event in events['events']:
+                    if await is_teams_exist(pool, event):
+                        events_list.append(event)
         except:
             logger.warning(f"Next 15 event not found by league id: {league['idleague']}")
             continue
@@ -31,10 +32,8 @@ async def get_next_events_api(pool: asyncpg.pool.Pool) -> list:
 
 async def work_with_events(pool: asyncpg.pool.Pool):
     events = await get_next_events_api(pool)
-
     await insert_events(pool, events)
     await insert_event_stats(pool, events)
     await insert_events_tv(pool, events)
     await insert_lineups(pool, events)
     await insert_timeline(pool, events)
-    await asyncio.sleep(10)

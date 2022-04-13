@@ -33,12 +33,13 @@ async def get_events_api(pool: asyncpg.pool.Pool) -> list:
             for s in seasons['seasons']:
                 try:
                     events = await leagueSeasonEvents(str(i['idleague']), s['strSeason'])
-                    for e in events['events']:
-                        if await is_teams_exist(pool, e):
-                            list_events.append(e)
+                    if events is not None:
+                        for e in events['events']:
+                            if await is_teams_exist(pool, e):
+                                list_events.append(e)
                 except:
-                    continue
                     logger.warning(f"Don`t have events by league: {i['idleague']} and season: {s['strSeason']}")
+                    continue
         except:
             continue
     return list_events
@@ -150,7 +151,6 @@ async def insert_events(pool: asyncpg.pool.Pool, list_events: list = None):
             logger.error(f"Transaction rollback. Events ({e['idEvent']}{e['idHomeTeam']}{e['idAwayTeam']}) don`t be insert. Exception: {exept}")
         else:
             await tr.commit()
-        print("insertEvents")
 
 
 async def update_event(pool: asyncpg.pool.Pool, event: dict):
@@ -234,7 +234,6 @@ async def update_event(pool: asyncpg.pool.Pool, event: dict):
         except Exception as e:
             await tr.rollback()
             logger.error(f"Transaction rollback. Events don`t be update. Exception: {e}")
-            raise
         else:
             await tr.commit()
 
@@ -249,8 +248,9 @@ async def get_event_stats_api(event_ids: list):
                 except KeyError:
                     id_event = str(event['idevent'])
                 event_stats = await eventStatistics(id_event)
-                for event_stat in event_stats['eventstats']:
-                    list_event_stats.append(event_stat)
+                if event_stats is not None:
+                    for event_stat in event_stats['eventstats']:
+                        list_event_stats.append(event_stat)
             except:
                 logger.warning(f"Event statistics not found by event id {id_event}")
                 continue

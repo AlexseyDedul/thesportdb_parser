@@ -20,9 +20,10 @@ async def get_last_events_api(pool: asyncpg.pool.Pool) -> list:
     for league in leagues:
         try:
             events = await lastLeagueEvents(str(league['idleague']))
-            for event in events['events']:
-                if await is_teams_exist(pool, event):
-                    events_list.append(event)
+            if events is not None:
+                for event in events['events']:
+                    if await is_teams_exist(pool, event):
+                        events_list.append(event)
         except:
             logger.warning(f"Last 15 event not found by league id: {league['idleague']}")
             continue
@@ -36,4 +37,3 @@ async def work_with_last_events(pool: asyncpg.pool.Pool):
     await insert_events_tv(pool, events)
     await insert_lineups(pool, events)
     await insert_timeline(pool, events)
-    await asyncio.sleep(10)

@@ -319,10 +319,10 @@ class Database:
                 await conn.execute('''
                                     DROP TABLE IF EXISTS contract;
                                     DROP TABLE IF EXISTS countries;
-                                     DROP TABLE IF EXISTS events CASCADE;
-                                     DROP TABLE IF EXISTS sports CASCADE;
+                                    DROP TABLE IF EXISTS events CASCADE;
+                                    DROP TABLE IF EXISTS sports CASCADE;
                                     DROP TABLE IF EXISTS league CASCADE;
-                                     DROP TABLE IF EXISTS team CASCADE;
+                                    DROP TABLE IF EXISTS team CASCADE;
                                     DROP TABLE IF EXISTS eventStats CASCADE;
                                     DROP TABLE IF EXISTS formerteam;
                                     DROP TABLE IF EXISTS channel CASCADE;
@@ -336,8 +336,6 @@ class Database:
                                     DROP TABLE IF EXISTS tables CASCADE;
                                     DROP TABLE IF EXISTS teamleague CASCADE;
                                     ''')
-                # ''''
-                #                     '''
             except Exception as e:
                 await tr.rollback()
                 logger.error(f"Error: {e}")
@@ -345,8 +343,7 @@ class Database:
                 await tr.commit()
         logger.info("Drop tables")
 
-    async def delete_pool_connection(self, pool):
-        await self.drop_tables()
-        await pool.close()
+    async def delete_pool_connection(self):
+        await self.pool.close()
         if await self.pool is None:
-            logger.info("Pool closed")
+            logger.info("Pool close")

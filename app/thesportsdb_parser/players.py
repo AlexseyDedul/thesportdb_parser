@@ -14,8 +14,9 @@ async def get_players_api(pool: asyncpg.pool.Pool) -> list:
     for t in teams:
         try:
             player = await teamPlayers(str(t['idteam']))
-            for p in player['player']:
-                list_players.append(p)
+            if player is not None:
+                for p in player['player']:
+                    list_players.append(p)
         except:
             logger.warning(f"PLayer not found by id team: {t['idteam']}")
             continue

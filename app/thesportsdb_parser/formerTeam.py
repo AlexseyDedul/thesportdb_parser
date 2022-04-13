@@ -13,14 +13,15 @@ async def get_former_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
         for p in players:
             former_team = await playersFormerTeam(str(p['idplayer']))
             try:
-                for former in former_team['formerteams']:
-                    team_exist = await conn.fetchrow('''
-                                                    SELECT idTeam 
-                                                    FROM team
-                                                    WHERE idTeam=$1
-                                                    ''', int(former['idFormerTeam']))
-                    if team_exist is not None:
-                        list_former.append(former)
+                if former_team is not None:
+                    for former in former_team['formerteams']:
+                        team_exist = await conn.fetchrow('''
+                                                        SELECT idTeam 
+                                                        FROM team
+                                                        WHERE idTeam=$1
+                                                        ''', int(former['idFormerTeam']))
+                        if team_exist is not None:
+                            list_former.append(former)
             except:
                 logger.warning(f"Former team not found by id player {p['idplayer']}")
                 continue

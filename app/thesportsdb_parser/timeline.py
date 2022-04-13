@@ -19,8 +19,9 @@ async def get_timeline_api(events: list) -> list:
                 except KeyError:
                     id_event = str(event['idevent'])
                 timelines = await eventTimeline(id_event)
-                for timeline in timelines['timeline']:
-                    list_timelines.append(timeline)
+                if timelines is not None:
+                    for timeline in timelines['timeline']:
+                        list_timelines.append(timeline)
             except:
                 logger.warning(f"Timeline not found by id event: {id_event}")
                 continue

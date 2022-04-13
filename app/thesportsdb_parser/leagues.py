@@ -12,8 +12,9 @@ async def get_leagues_api(leagues: list) -> list:
     for league in leagues['leagues']:
         try:
             league_info = await leagueInfo(league['idLeague'])
-            for l in league_info['leagues']:
-                league_list.append(l)
+            if league_info is not None:
+                for l in league_info['leagues']:
+                    league_list.append(l)
         except:
             logger.warning(f"Leagues info not found by league id: {league['idLeague']}")
             continue

@@ -18,8 +18,9 @@ async def get_events_tv_api(events: list) -> list:
                 except KeyError:
                     id_event = str(event['idevent'])
                 events_tv = await eventTVByEvent(id_event)
-                for event_tv in events_tv['tvevent']:
-                    list_events_tv.append(event_tv)
+                if events_tv is not None:
+                    for event_tv in events_tv['tvevent']:
+                        list_events_tv.append(event_tv)
             except:
                 logger.warning(f"Event TV not found by event id: {id_event}")
                 continue

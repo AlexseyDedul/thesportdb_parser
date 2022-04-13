@@ -20,5 +20,7 @@ async def make_request(endpoint: str, **kwargs):
         # await asyncio.sleep(2)
         async with session.get(URL, params=params) as response:
             print(response)
-            if response.content_type == 'application/json':
+            if response.content_type == 'application/json' and response.status == 200:
                 return await response.json()
+            else:
+                return None

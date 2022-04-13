@@ -13,14 +13,15 @@ async def get_honours_team_api(pool: asyncpg.pool.Pool, players: list) -> list:
         for p in players:
             honours_team = await playersHonours(str(p['idplayer']))
             try:
-                for honour in honours_team['honors']:
-                    team_exist = await conn.fetchrow('''
-                                                    SELECT idTeam 
-                                                    FROM team
-                                                    WHERE idTeam=$1
-                                                    ''', int(honour['idTeam']))
-                    if team_exist is not None:
-                        list_honours.append(honour)
+                if honours_team is not None:
+                    for honour in honours_team['honors']:
+                        team_exist = await conn.fetchrow('''
+                                                        SELECT idTeam 
+                                                        FROM team
+                                                        WHERE idTeam=$1
+                                                        ''', int(honour['idTeam']))
+                        if team_exist is not None:
+                            list_honours.append(honour)
             except:
                 logger.warning(f"Honours team not found by id player: {p['idplayer']}")
                 continue

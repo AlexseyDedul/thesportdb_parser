@@ -12,8 +12,9 @@ async def get_contracts_api(players: list) -> list:
     for p in players:
         contracts = await playersContracts(str(p['idplayer']))
         try:
-            for contract in contracts['contracts']:
-                list_contracts.append(contract)
+            if contracts is not None:
+                for contract in contracts['contracts']:
+                    list_contracts.append(contract)
         except:
             logger.warning(f"Contract by league id {p['idplayer']} not found.")
             continue

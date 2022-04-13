@@ -16,8 +16,9 @@ async def get_tables_api(leagues: list) -> list:
             for s in seasons['seasons']:
                 try:
                     table = await leagueSeasonTable(str(i['idleague']), s['strSeason'])
-                    for t in table['table']:
-                        tables.append(t)
+                    if table is not None:
+                        for t in table['table']:
+                            tables.append(t)
                 except:
                     logger.warning(f"Table not found by id league: {i['idleague']} and id season: {s['strSeason']}")
                     continue
