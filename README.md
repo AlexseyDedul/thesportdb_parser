@@ -4,6 +4,8 @@ git clone https://git.prj365.com/dedul.an/thesportdb.git
 
 cd thesportdb
 
+python3 -m venv venv
+
 . venv/bin/activate
 
 pipenv install Pipfile
