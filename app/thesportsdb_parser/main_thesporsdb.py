@@ -69,7 +69,7 @@ async def tasks_once_a_week(pool: asyncpg.pool.Pool):
 
 async def tasks_once_a_day(pool: asyncpg.pool.Pool):
     while True:
-        await asyncio.sleep(60 * 60 * 24)
+        await asyncio.sleep(60 * 60 * 12)
         await work_with_events(pool),
         await work_with_last_events(pool)
 
@@ -78,7 +78,6 @@ async def main(app):
     pool = await app['db'].get_pool_connection()
     # await app['db'].drop_tables()
     await app['db'].create_tables()
-
     await start_parser(pool)
 
     tasks = [
