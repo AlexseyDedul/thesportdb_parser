@@ -23,13 +23,13 @@ from thesportsdb.sports import allSports
 
 
 async def start_parser(pool: asyncpg.pool.Pool):
-    await asyncio.create_task(insert_countries(pool, await allCountries())),
-    await asyncio.create_task(insert_sports(pool, await allSports())),
-    await asyncio.create_task(insert_leagues(pool, await allLeagues()))
+    await insert_countries(pool, await allCountries()),
+    await insert_sports(pool, await allSports()),
+    await insert_leagues(pool, await allLeagues())
     leagues = await get_leagues_ids_list(pool)
-    await asyncio.create_task(insert_teams(pool, leagues)),
-    await asyncio.create_task(insert_events(pool)),
-    await asyncio.create_task(insert_players(pool))
+    await insert_teams(pool, leagues),
+    await insert_events(pool),
+    await insert_players(pool)
     players = await get_list_players_db(pool)
     await asyncio.gather(
         asyncio.create_task(insert_tables(pool, leagues)),
