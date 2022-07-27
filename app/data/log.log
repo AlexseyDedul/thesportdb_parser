@@ -1,0 +1,2 @@
+2022-07-24 12:51:01:app.thesportsdb_parser.timeline:516066:137 ERROR Transaction rollback. Timeline don`t be insert. Exception: insert or update on table "timeline" violates foreign key constraint "timeline_idplayer_fkey"
+DETAIL:  Key (idplayer)=(34145610) is not present in table "player".

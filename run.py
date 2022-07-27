@@ -14,7 +14,7 @@ def run():
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(main(app))
-        loop.run_forever()
+        # loop.run_forever()
     except KeyboardInterrupt:
         logger.info("Close application.")
 

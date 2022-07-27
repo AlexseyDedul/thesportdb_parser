@@ -1,6 +1,8 @@
 import asyncpg
 
 from app.thesportsdb_parser.events import get_event_ids_db
+from app.thesportsdb_parser.players import check_player_in_db
+from app.thesportsdb_parser.teams import check_team_in_db
 from thesportsdb.events import eventLineup
 import logging
 
@@ -77,6 +79,9 @@ async def insert_lineups(pool: asyncpg.pool.Pool, events_ids: list = None):
         await tr.start()
         try:
             for lineup in lineups:
+                await check_team_in_db(pool, int(lineup['idTeam']))
+                await check_player_in_db(pool, int(lineup['idPlayer']))
+
                 lineup_exist = await conn.fetchrow('''
                                                 SELECT idLineup
                                                 FROM lineup

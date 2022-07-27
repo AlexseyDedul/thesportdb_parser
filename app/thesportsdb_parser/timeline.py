@@ -1,6 +1,8 @@
 import asyncpg
 
 from app.thesportsdb_parser.events import get_event_ids_db
+from app.thesportsdb_parser.players import get_player_api_by_id, check_player_in_db
+from app.thesportsdb_parser.teams import check_team_in_db
 from thesportsdb.events import eventTimeline
 
 import logging
@@ -66,7 +68,7 @@ async def update_timeline(pool: asyncpg.pool.Pool, timeline: dict):
                                timeline['dateEvent'],
                                timeline['strSeason'],
                                int(timeline['idTimeline']))
-        except Exception as e:
+        except KeyError as e:
             await tr.rollback()
             logger.error(f"Transaction rollback. Timeline don`t be update. Exception: {e}")
         else:
@@ -82,6 +84,9 @@ async def insert_timeline(pool: asyncpg.pool.Pool, event_ids: list = None):
         await tr.start()
         try:
             for timeline in timelines:
+                await check_team_in_db(pool, int(timeline['idTeam']))
+                await check_player_in_db(pool, int(timeline['idPlayer']))
+
                 timeline_exist = await conn.fetchrow('''
                                                 SELECT idTimeline
                                                 FROM timeline
@@ -130,6 +135,7 @@ async def insert_timeline(pool: asyncpg.pool.Pool, event_ids: list = None):
                 else:
                     await update_timeline(pool, timeline)
         except Exception as e:
+            await get_player_api_by_id(pool, int(timeline['idPlayer']))
             await tr.rollback()
             logger.error(f"Transaction rollback. Timeline don`t be insert. Exception: {e}")
         else:

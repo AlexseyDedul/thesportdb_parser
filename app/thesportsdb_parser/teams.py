@@ -2,7 +2,7 @@ import asyncio
 
 import asyncpg
 
-from thesportsdb.teams import leagueTeams
+from thesportsdb.teams import leagueTeams, teamInfo
 
 import logging
 
@@ -26,6 +26,37 @@ async def get_teams_by_league(leagues: list) -> dict:
     return dict_league_teams
 
 
+async def get_team_from_db_by_id(pool: asyncpg.pool.Pool, team_id: int):
+    async with pool.acquire() as conn:
+        return await conn.fetch(f'''
+                                SELECT idteam 
+                                FROM team
+                                WHERE idteam={team_id}
+                                ''')
+
+
+async def check_team_in_db(pool: asyncpg.pool.Pool, team_id: int):
+    team = await get_team_from_db_by_id(pool, team_id)
+    if not team:
+        await get_team_api_by_id(pool, team_id)
+
+
+async def get_team_api_by_id(pool: asyncpg.pool.Pool, id_team: int):
+    team_dict = {}
+    try:
+        teams = await teamInfo(str(id_team))
+        if teams is not None:
+            team_list = []
+            for team in teams['teams']:
+                team_list.append(team)
+            team_dict[id_team] = team_list
+
+        await insert_teams(pool=pool, leagues=[], teams_by_id=team_dict)
+    except:
+        logger.warning(f"Team not found by team id: {id_team}")
+        return None
+
+
 async def is_compare_size(pool: asyncpg.pool.Pool, league_team: dict) -> bool:
     async with pool.acquire() as conn:
         count_db = await conn.fetchrow('''
@@ -46,8 +77,11 @@ async def get_team_by_id(pool: asyncpg.pool.Pool, id_team: int):
             'SELECT * FROM team WHERE idTeam=$1', id_team)
 
 
-async def insert_teams(pool: asyncpg.pool.Pool, leagues: list):
-    dict_league_teams = await get_teams_by_league(leagues)
+async def insert_teams(pool: asyncpg.pool.Pool, leagues: list, teams_by_id: dict = None):
+    if teams_by_id is None:
+        dict_league_teams = await get_teams_by_league(leagues)
+    else:
+        dict_league_teams = teams_by_id
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
@@ -207,8 +241,8 @@ async def update_team(pool: asyncpg.pool.Pool, team: dict):
                                team['strTeamFanart4'],
                                int(team['idTeam']))
         except Exception as e:
-            await tr.rollback()
             logger.error(f"Transaction rollback. Team don`t be update. Exception: {e}")
+            await tr.rollback()
         else:
             await tr.commit()
 
@@ -231,8 +265,8 @@ async def insert_league_teams(pool: asyncpg.pool.Pool, league_team: dict):
                                             VALUES($1, $2)
                                         ''', item[0], int(team['idTeam']))
         except Exception as e:
-            await tr.rollback()
             logger.error(f"Transaction rollback. Team league table don`t be update. Exception: {e}")
+            await tr.rollback()
         else:
             await tr.commit()
 
