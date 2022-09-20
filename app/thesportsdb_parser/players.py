@@ -1,6 +1,7 @@
 import asyncpg
 
 from app.thesportsdb_parser.teams import get_teams_ids_list
+from app.thesportsdb_parser.utils import save_img_to_folder
 from thesportsdb.players import teamPlayers, playerDetails
 import logging
 
@@ -64,6 +65,7 @@ async def update_player(pool: asyncpg.pool.Pool, player: dict):
         tr = conn.transaction()
         await tr.start()
         try:
+            player_logo = await save_img_to_folder('/player_logo/', player['strThumb'], player['strPlayer'])
             await conn.execute('''
                                 UPDATE player
                                 SET strNationality=$1,
@@ -123,7 +125,7 @@ async def update_player(pool: asyncpg.pool.Pool, player: dict):
                                player['strYoutube'],
                                player['strHeight'],
                                player['strWeight'],
-                               player['strThumb'],
+                               player_logo if player_logo is not None else player['strThumb'],
                                player['strFanart1'],
                                player['strFanart2'],
                                player['strFanart3'],
@@ -150,6 +152,7 @@ async def insert_players(pool: asyncpg.pool.Pool, list_player: list = None):
                                                     SELECT * FROM player WHERE idPlayer=$1
                                                     ''', int(p['idPlayer']))
                 if player_exist is None:
+                    player_logo = await save_img_to_folder('/player_logo/', p['strThumb'], p['strPlayer'])
                     await conn.execute('''
                                 INSERT INTO player(
                                     idPlayer,
@@ -215,7 +218,7 @@ async def insert_players(pool: asyncpg.pool.Pool, list_player: list = None):
                                    p['strYoutube'],
                                    p['strHeight'],
                                    p['strWeight'],
-                                   p['strThumb'],
+                                   player_logo if player_logo is not None else p['strThumb'],
                                    p['strFanart1'],
                                    p['strFanart2'],
                                    p['strFanart3'],

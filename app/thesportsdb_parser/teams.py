@@ -2,6 +2,7 @@ import asyncio
 
 import asyncpg
 
+from app.thesportsdb_parser.utils import save_img_to_folder
 from thesportsdb.teams import leagueTeams, teamInfo
 
 import logging
@@ -91,6 +92,8 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list, teams_by_id: dict
                     team_exist_db = await conn.fetchrow(
                         'SELECT * FROM team WHERE idTeam=$1', int(t['idTeam']))
                     if team_exist_db is None:
+                        team_logo = await save_img_to_folder('/team_logo/', t['strTeamLogo'], t['strTeam'])
+                        team_banner = await save_img_to_folder('/team_banner/', t['strTeamBanner'], t['strTeam'])
                         await conn.execute('''INSERT INTO team(idTeam,
                                     strTeam,
                                     strAlternate,
@@ -154,8 +157,8 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list, teams_by_id: dict
                                            t['strCountry'],
                                            t['strTeamBadge'],
                                            t['strTeamJersey'],
-                                           t['strTeamLogo'],
-                                           t['strTeamBanner'],
+                                           team_logo if team_logo is not None else t['strTeamLogo'],
+                                           team_banner if team_banner is not None else t['strTeamBanner'],
                                            t['strTeamFanart1'],
                                            t['strTeamFanart2'],
                                            t['strTeamFanart3'],
@@ -176,6 +179,8 @@ async def update_team(pool: asyncpg.pool.Pool, team: dict):
         tr = conn.transaction()
         await tr.start()
         try:
+            team_logo = await save_img_to_folder('/team_logo/', team['strTeamLogo'], team['strTeam'])
+            team_banner = await save_img_to_folder('/team_banner/', team['strTeamBanner'], team['strTeam'])
             await conn.execute('''UPDATE team
                                 SET strTeam=$1,
                                 strAlternate=$2,
@@ -233,8 +238,8 @@ async def update_team(pool: asyncpg.pool.Pool, team: dict):
                                team['strCountry'],
                                team['strTeamBadge'],
                                team['strTeamJersey'],
-                               team['strTeamLogo'],
-                               team['strTeamBanner'],
+                               team_logo if team_logo is not None else team['strTeamLogo'],
+                               team_banner if team_banner is not None else team['strTeamBanner'],
                                team['strTeamFanart1'],
                                team['strTeamFanart2'],
                                team['strTeamFanart3'],

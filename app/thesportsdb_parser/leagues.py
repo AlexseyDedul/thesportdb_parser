@@ -1,5 +1,6 @@
 import asyncpg
 
+from app.thesportsdb_parser.utils import save_img_to_folder
 from thesportsdb.leagues import leagueInfo
 import logging
 
@@ -31,6 +32,9 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                 league_exist = await conn.fetchrow(
                     'SELECT idLeague FROM league WHERE idLeague=$1', int(league['idLeague']))
                 if league_exist is None:
+                    league_banner = await save_img_to_folder('/league_banner/', league["strBanner"],
+                                                             league["strLeague"])
+                    league_logo = await save_img_to_folder('/league_logo/', league["strLogo"], league["strLeague"])
                     await conn.execute('''
                             INSERT INTO league(idLeague,
                                     strSport,
@@ -84,9 +88,9 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                                        league["strFanart2"],
                                        league["strFanart3"],
                                        league["strFanart4"],
-                                       league["strBanner"],
+                                       league_banner if league_banner is not None else league["strBanner"],
                                        league["strBadge"],
-                                       league["strLogo"],
+                                       league_logo if league_logo is not None else league["strLogo"],
                                        league["strPoster"],
                                        league["strTrophy"],
                                        league["strNaming"],
@@ -106,6 +110,8 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
     async with pool.acquire() as conn:
         tr = conn.transaction()
         await tr.start()
+        league_banner = await save_img_to_folder('/league_banner/', league["strBanner"], league["strLeague"])
+        league_logo = await save_img_to_folder('/league_logo/', league["strLogo"], league["strLeague"])
         try:
             await conn.execute('''
                                 UPDATE league
@@ -158,9 +164,9 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
                                league["strFanart2"],
                                league["strFanart3"],
                                league["strFanart4"],
-                               league["strBanner"],
+                               league_banner if league_banner is not None else league["strBanner"],
                                league["strBadge"],
-                               league["strLogo"],
+                               league_logo if league_logo is not None else league["strLogo"],
                                league["strPoster"],
                                league["strTrophy"],
                                league["strNaming"],
