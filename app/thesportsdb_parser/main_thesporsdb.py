@@ -47,18 +47,18 @@ async def start_parser(pool: asyncpg.pool.Pool):
 
 async def tasks_once_a_month(pool: asyncpg.pool.Pool):
     while True:
-        # await insert_countries(pool, await allCountries()),
-        # await insert_sports(pool, await allSports()),
+        await insert_countries(pool, await allCountries()),
+        await insert_sports(pool, await allSports()),
         await insert_leagues(pool, await allLeagues())
         leagues = await get_leagues_ids_list(pool)
         await insert_teams(pool, leagues),
         await insert_players(pool)
-        # players = await get_list_players_db(pool)
-        # await asyncio.gather(
-        #     asyncio.create_task(insert_contracts(pool, players)),
-        #     asyncio.create_task(insert_former_teams(pool, players)),
-        #     asyncio.create_task(insert_honours_teams(pool, players))
-        # )
+        players = await get_list_players_db(pool)
+        await asyncio.gather(
+            asyncio.create_task(insert_contracts(pool, players)),
+            asyncio.create_task(insert_former_teams(pool, players)),
+            asyncio.create_task(insert_honours_teams(pool, players))
+        )
         await asyncio.sleep(60 * 60 * 24 * 30)
 
 
@@ -84,15 +84,10 @@ async def main(app):
 
     tasks = [
         asyncio.create_task(tasks_once_a_month(pool)),
-        # asyncio.create_task(tasks_once_a_week(pool)),
-        # asyncio.create_task(tasks_once_a_day(pool))
+        asyncio.create_task(tasks_once_a_week(pool)),
+        asyncio.create_task(tasks_once_a_day(pool))
         ]
 
     await asyncio.gather(
         *tasks
     )
-
-    # filename = 'https://www.thesportsdb.com/images/media/team/logo/nqpkt11606050101.png'
-    # team_title = "Houston Dynamo"
-    # sv_path = '/logo/'
-    # print(await save_img_to_folder(sv_path, filename, team_title))
