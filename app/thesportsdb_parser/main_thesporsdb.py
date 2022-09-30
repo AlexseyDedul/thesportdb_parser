@@ -1,7 +1,5 @@
 import asyncio
-import re
 
-import aiohttp
 import asyncpg
 
 from app.thesportsdb_parser.contracts import insert_contracts
@@ -73,7 +71,7 @@ async def tasks_once_a_day(pool: asyncpg.pool.Pool):
     while True:
         await work_with_events(pool),
         await work_with_last_events(pool)
-        await asyncio.sleep(60 * 60 * 12)
+        await asyncio.sleep(60 * 60)
 
 
 async def main(app):
@@ -91,3 +89,4 @@ async def main(app):
     await asyncio.gather(
         *tasks
     )
+
