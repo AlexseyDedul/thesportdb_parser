@@ -1,4 +1,7 @@
+__pycache__/
 /.env
 /.idea
 /.venv
 /.resource
+venv
+*.log
