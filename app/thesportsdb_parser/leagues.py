@@ -10,15 +10,19 @@ logger = logging.getLogger(__name__)
 
 async def get_leagues_api(leagues: list) -> list:
     league_list = []
-    for league in leagues['leagues']:
-        try:
-            league_info = await leagueInfo(league['idLeague'])
-            if league_info is not None:
-                for l in league_info['leagues']:
-                    league_list.append(l)
-        except:
-            logger.warning(f"Leagues info not found by league id: {league['idLeague']}")
-            continue
+    try:
+        for league in leagues['leagues']:
+            try:
+                league_info = await leagueInfo(league['idLeague'])
+                if league_info is not None:
+                    for l in league_info['leagues']:
+                        league_list.append(l)
+            except:
+                logger.warning(f"Leagues info not found by league id: {league['idLeague']}")
+                continue
+    except TypeError:
+        pass
+
     return league_list
 
 

@@ -23,7 +23,7 @@ async def get_tables_api(leagues: list) -> list:
                     logger.warning(f"Table not found by id league: {i['idleague']} and id season: {s['strSeason']}")
                     continue
         except:
-            logger.warning(f"Season not found by id season: {s['strSeason']}")
+            # logger.warning(f"Season not found by id season: {s['strSeason']}")
             continue
     return tables
 
