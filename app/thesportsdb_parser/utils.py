@@ -25,13 +25,13 @@ async def save_img_to_folder(sv_path, cur_img, title):
                             await f.write(await res.read())
                             await f.close()
 
-                        cmd = ("cwebp -q " + str(100) + " " + tmp_path + " -o " + tmp_path[:tmp_path.index(".") - 4] + ".webp")
+            cmd = ("cwebp -q " + str(100) + " " + tmp_path + " -o " + tmp_path[:tmp_path.index(".") - 4] + ".webp")
 
-                        os.system(cmd)
+            os.system(cmd)
 
-                        os.remove(tmp_path)
+            os.remove(tmp_path)
 
-                        return new_path.replace('.', '', 1)
+            return new_path.replace('.', '', 1)
         else:
             return new_path.replace('.', '', 1)
 
