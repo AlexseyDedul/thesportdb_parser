@@ -94,7 +94,7 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list, teams_by_id: dict
                     if team_exist_db is None:
                         team_logo = await save_img_to_folder('/team_logo/', t['strTeamLogo'], t['strTeam'])
                         team_banner = await save_img_to_folder('/team_banner/', t['strTeamBanner'], t['strTeam'])
-                        team_badge = await save_img_to_folder('/team_badge/', team['strTeamBadge'], team['strTeam'])
+                        team_badge = await save_img_to_folder('/team_badge/', t['strTeamBadge'], t['strTeam'])
                         await conn.execute('''INSERT INTO team(idTeam,
                                     strTeam,
                                     strAlternate,
