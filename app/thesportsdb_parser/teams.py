@@ -94,6 +94,7 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list, teams_by_id: dict
                     if team_exist_db is None:
                         team_logo = await save_img_to_folder('/team_logo/', t['strTeamLogo'], t['strTeam'])
                         team_banner = await save_img_to_folder('/team_banner/', t['strTeamBanner'], t['strTeam'])
+                        team_badge = await save_img_to_folder('/team_badge/', team['strTeamBadge'], team['strTeam'])
                         await conn.execute('''INSERT INTO team(idTeam,
                                     strTeam,
                                     strAlternate,
@@ -155,7 +156,7 @@ async def insert_teams(pool: asyncpg.pool.Pool, leagues: list, teams_by_id: dict
                                            t['strDescriptionRU'],
                                            t['strGender'],
                                            t['strCountry'],
-                                           t['strTeamBadge'],
+                                           team_badge if team_badge is not None else t['strTeamBadge'],
                                            t['strTeamJersey'],
                                            team_logo if team_logo is not None else t['strTeamLogo'],
                                            team_banner if team_banner is not None else t['strTeamBanner'],
@@ -181,6 +182,7 @@ async def update_team(pool: asyncpg.pool.Pool, team: dict):
         try:
             team_logo = await save_img_to_folder('/team_logo/', team['strTeamLogo'], team['strTeam'])
             team_banner = await save_img_to_folder('/team_banner/', team['strTeamBanner'], team['strTeam'])
+            team_badge = await save_img_to_folder('/team_badge/', team['strTeamBadge'], team['strTeam'])
             await conn.execute('''UPDATE team
                                 SET strTeam=$1,
                                 strAlternate=$2,
@@ -236,7 +238,7 @@ async def update_team(pool: asyncpg.pool.Pool, team: dict):
                                team['strDescriptionRU'],
                                team['strGender'],
                                team['strCountry'],
-                               team['strTeamBadge'],
+                               team_badge if team_badge is not None else team['strTeamBadge'],
                                team['strTeamJersey'],
                                team_logo if team_logo is not None else team['strTeamLogo'],
                                team_banner if team_banner is not None else team['strTeamBanner'],
