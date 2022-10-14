@@ -39,6 +39,7 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                     league_banner = await save_img_to_folder('/league_banner/', league["strBanner"],
                                                              league["strLeague"])
                     league_logo = await save_img_to_folder('/league_logo/', league["strLogo"], league["strLeague"])
+                    league_badge = await save_img_to_folder('/league_badge/', league["strBadge"], league["strLeague"])
                     await conn.execute('''
                             INSERT INTO league(idLeague,
                                     strSport,
@@ -93,7 +94,7 @@ async def insert_leagues(pool: asyncpg.pool.Pool, leagues: dict):
                                        league["strFanart3"],
                                        league["strFanart4"],
                                        league_banner if league_banner is not None else league["strBanner"],
-                                       league["strBadge"],
+                                       league_badge if league_badge is not None else league["strBadge"],
                                        league_logo if league_logo is not None else league["strLogo"],
                                        league["strPoster"],
                                        league["strTrophy"],
@@ -116,6 +117,7 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
         await tr.start()
         league_banner = await save_img_to_folder('/league_banner/', league["strBanner"], league["strLeague"])
         league_logo = await save_img_to_folder('/league_logo/', league["strLogo"], league["strLeague"])
+        league_badge = await save_img_to_folder('/league_badge/', league["strBadge"], league["strLeague"])
         try:
             await conn.execute('''
                                 UPDATE league
@@ -169,7 +171,7 @@ async def update_leagues(pool: asyncpg.pool.Pool, league: dict):
                                league["strFanart3"],
                                league["strFanart4"],
                                league_banner if league_banner is not None else league["strBanner"],
-                               league["strBadge"],
+                               league_badge if league_badge is not None else league["strBadge"],
                                league_logo if league_logo is not None else league["strLogo"],
                                league["strPoster"],
                                league["strTrophy"],
