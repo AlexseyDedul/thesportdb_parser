@@ -1,6 +1,6 @@
 How to use:
 
-git clone https://git.prj365.com/dedul.an/thesportdb.git
+git clone
 
 cd thesportdb
 

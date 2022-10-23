@@ -1,6 +1,6 @@
 BASE_URL = "https://www.thesportsdb.com/api/v1/json/"
 BASE_URL_V2 = "https://www.thesportsdb.com/api/v2/json/"
-API_KEY = "40130162"
+API_KEY = ""
 
 # GET EVENTS
 # ?id=133602 get next 5 events by teamId !!!!!!!!!!
